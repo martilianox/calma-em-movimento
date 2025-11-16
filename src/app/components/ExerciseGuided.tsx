@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { ArrowLeft, Play, Pause, RotateCcw } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { ArrowLeft, Play, Pause, RotateCcw, SkipForward } from 'lucide-react'
 import type { Screen } from '../page'
 
 interface ExerciseGuidedProps {
@@ -13,6 +13,7 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [timeLeft, setTimeLeft] = useState(0)
+  const audioContextRef = useRef<AudioContext | null>(null)
 
   const exercises = {
     'breathing-calm': {
@@ -108,6 +109,35 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
 
   const exercise = exercises[exerciseId as keyof typeof exercises]
 
+  // Função para tocar som suave de transição
+  const playTransitionSound = () => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+      }
+      
+      const ctx = audioContextRef.current
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      
+      // Som suave e calmo (frequência baixa)
+      oscillator.frequency.value = 432 // Frequência relaxante
+      oscillator.type = 'sine'
+      
+      // Volume baixo e fade out suave
+      gainNode.gain.setValueAtTime(0.1, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+      
+      oscillator.start(ctx.currentTime)
+      oscillator.stop(ctx.currentTime + 0.3)
+    } catch (error) {
+      console.log('Áudio não disponível:', error)
+    }
+  }
+
   useEffect(() => {
     if (!isPlaying || currentStep >= exercise.steps.length) return
 
@@ -117,10 +147,13 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           if (currentStep < exercise.steps.length - 1) {
+            // Toca som suave ao avançar automaticamente
+            playTransitionSound()
             setCurrentStep((s) => s + 1)
             return exercise.steps[currentStep + 1].duration
           } else {
             setIsPlaying(false)
+            playTransitionSound()
             return 0
           }
         }
@@ -144,6 +177,18 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
     setCurrentStep(0)
     setIsPlaying(false)
     setTimeLeft(exercise.steps[0].duration)
+  }
+
+  const handleSkipNext = () => {
+    if (currentStep < exercise.steps.length - 1) {
+      playTransitionSound()
+      setCurrentStep((s) => s + 1)
+      setTimeLeft(exercise.steps[currentStep + 1].duration)
+    } else {
+      // Se estiver no último passo, finaliza
+      setIsPlaying(false)
+      playTransitionSound()
+    }
   }
 
   const progress = ((currentStep + 1) / exercise.steps.length) * 100
@@ -238,7 +283,8 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
       </div>
 
       {/* Controls */}
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-3">
+        {/* Botão principal: Play/Pause */}
         <button
           onClick={handlePlayPause}
           className="w-full py-4 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center gap-2"
@@ -259,6 +305,21 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
             </>
           )}
         </button>
+
+        {/* Botão secundário: Avançar manualmente */}
+        {!isComplete && (
+          <button
+            onClick={handleSkipNext}
+            className="w-full py-3 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center gap-2"
+            style={{ 
+              backgroundColor: exercise.textLight ? 'rgba(255, 255, 255, 0.15)' : 'rgba(92, 111, 130, 0.1)',
+              color: exercise.textLight ? 'rgba(255, 255, 255, 0.9)' : '#5C6F82'
+            }}
+          >
+            <SkipForward className="w-4 h-4" />
+            Próximo passo
+          </button>
+        )}
 
         {isComplete && (
           <button
