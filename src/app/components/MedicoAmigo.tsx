@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ArrowLeft, Send, Heart, Phone, AlertCircle, Activity, Brain, Dumbbell } from 'lucide-react'
+import { ArrowLeft, Send, Heart, Phone, AlertCircle, Activity, Brain, Dumbbell, MessageCircle } from 'lucide-react'
 import type { Screen } from '../page'
 
 interface MedicoAmigoProps {
@@ -21,7 +21,7 @@ interface Message {
 interface SymptomAnalysis {
   severity: 'low' | 'medium' | 'high' | 'emergency'
   symptoms: string[]
-  recommendation: 'exercise' | 'breathing' | 'medical' | 'emergency'
+  recommendation: 'exercise' | 'breathing' | 'medical' | 'emergency' | 'conversation'
   confidence: number
 }
 
@@ -31,7 +31,7 @@ const QUICK_RESPONSES = [
   "Sinto falta de ar",
   "Estou com tontura",
   "Preciso de exercícios",
-  "Quero conversar"
+  "Quero conversar sobre o que sinto"
 ]
 
 // Palavras-chave para análise de severidade
@@ -59,12 +59,19 @@ const EXERCISE_KEYWORDS = [
   'relaxar', 'técnica', 'meditação', 'alongamento', 'movimento'
 ]
 
+const CONVERSATION_KEYWORDS = [
+  'conversar', 'falar', 'desabafar', 'ouvir', 'entender',
+  'explicar', 'saber', 'porque', 'por que', 'como funciona',
+  'o que está', 'o que é', 'me ajuda a entender', 'não entendo',
+  'corpo', 'sintoma', 'sensação', 'sentindo', 'acontecendo'
+]
+
 export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'ai',
-      content: 'Oi, eu sou o Médico Amigo. 💙\n\nEstou aqui para te ouvir e te ajudar.\n\nMe conta: como você está se sentindo agora?',
+      content: 'Oi, eu sou o Médico Amigo. 💙\n\nEstou aqui para te ouvir, te entender e te ajudar.\n\nPode me contar tudo: como você está se sentindo? O que está acontecendo com seu corpo? Estou aqui para conversar e te orientar no seu tempo.',
       timestamp: new Date(),
       showActions: false
     }
@@ -73,6 +80,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
   const [isTyping, setIsTyping] = useState(false)
   const [conversationContext, setConversationContext] = useState<string[]>([])
   const [userSymptoms, setUserSymptoms] = useState<string[]>([])
+  const [conversationMode, setConversationMode] = useState<'initial' | 'exploring' | 'monitoring'>('initial')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -86,10 +94,13 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
     const fullContext = [...context, lowerText].join(' ')
     
     let severity: 'low' | 'medium' | 'high' | 'emergency' = 'low'
-    let recommendation: 'exercise' | 'breathing' | 'medical' | 'emergency' = 'exercise'
+    let recommendation: 'exercise' | 'breathing' | 'medical' | 'emergency' | 'conversation' = 'conversation'
     const symptoms: string[] = []
     let confidence = 0
 
+    // Verifica se usuário quer conversar/entender
+    const wantsConversation = CONVERSATION_KEYWORDS.some(keyword => lowerText.includes(keyword))
+    
     // Verifica emergência
     const hasEmergency = EMERGENCY_KEYWORDS.some(keyword => {
       if (lowerText.includes(keyword)) {
@@ -121,7 +132,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
       confidence = 0.85
     } else if (highSeverityCount >= 1) {
       severity = 'medium'
-      recommendation = 'breathing'
+      recommendation = wantsConversation ? 'conversation' : 'breathing'
       confidence = 0.7
     }
 
@@ -136,11 +147,11 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
 
     if (mediumSeverityCount >= 3 && severity === 'low') {
       severity = 'medium'
-      recommendation = 'breathing'
+      recommendation = wantsConversation ? 'conversation' : 'breathing'
       confidence = 0.75
     } else if (mediumSeverityCount >= 1 && severity === 'low') {
       severity = 'low'
-      recommendation = 'exercise'
+      recommendation = wantsConversation ? 'conversation' : 'exercise'
       confidence = 0.6
     }
 
@@ -149,6 +160,12 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
     if (asksForExercise && severity !== 'emergency' && severity !== 'high') {
       recommendation = 'exercise'
       confidence = 0.9
+    }
+
+    // Prioriza conversação se usuário demonstra querer entender
+    if (wantsConversation && severity !== 'emergency' && severity !== 'high') {
+      recommendation = 'conversation'
+      confidence = 0.85
     }
 
     // Ajusta confiança baseado no contexto
@@ -183,9 +200,38 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
       return {
         content: '⚠️ Entendo que você está passando por algo intenso.\n\n' +
                  'Pelos sintomas que você descreveu, eu recomendo fortemente que você procure atendimento médico hoje mesmo.\n\n' +
-                 'Enquanto isso, posso te ajudar com técnicas de respiração para aliviar um pouco o desconforto.\n\n' +
+                 'Enquanto isso, posso te ajudar com técnicas de respiração para aliviar um pouco o desconforto, ou podemos conversar mais sobre o que você está sentindo.\n\n' +
                  'O que você prefere fazer agora?',
         showActions: true
+      }
+    }
+
+    // CONVERSAÇÃO - Usuário quer entender/dialogar
+    if (recommendation === 'conversation') {
+      setConversationMode('exploring')
+      
+      const conversationResponses = [
+        'Entendo que você quer compreender melhor o que está acontecendo. 💙\n\n' +
+        'Vamos conversar com calma. Cada sensação que você tem é uma forma do seu corpo se comunicar.\n\n' +
+        'Me conte mais: quando essas sensações começaram? Há algo específico que você notou?',
+        
+        'Fico feliz que você queira entender seu corpo melhor. 🌟\n\n' +
+        'A ansiedade pode se manifestar de várias formas físicas. Seu corpo está tentando te proteger, mesmo que pareça desconfortável.\n\n' +
+        'Vamos explorar juntos: o que mais te preocupa nessas sensações?',
+        
+        'É muito importante você querer entender o que está sentindo. 💙\n\n' +
+        'Muitas vezes, quando entendemos nossos sintomas, eles se tornam menos assustadores.\n\n' +
+        'Me fala: essas sensações aparecem em momentos específicos ou de forma aleatória?',
+        
+        'Você está no caminho certo ao buscar compreender seu corpo. 🌸\n\n' +
+        'Cada sintoma tem um significado, e juntos podemos descobrir o que seu corpo está tentando dizer.\n\n' +
+        'Além do que você já me contou, há outras sensações que você tem notado?'
+      ]
+      
+      const randomIndex = Math.floor(Math.random() * conversationResponses.length)
+      return {
+        content: conversationResponses[randomIndex],
+        showActions: false
       }
     }
 
@@ -195,8 +241,8 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
         return {
           content: 'Eu entendo o que você está sentindo. 💙\n\n' +
                    'Esses sintomas são comuns em momentos de ansiedade, mas podemos trabalhar juntos para aliviar.\n\n' +
-                   'Vou te ensinar uma técnica de respiração que pode ajudar muito agora.\n\n' +
-                   'Quer tentar comigo?',
+                   'Posso te ensinar uma técnica de respiração que pode ajudar muito agora, ou podemos conversar mais sobre o que você está sentindo.\n\n' +
+                   'O que você prefere?',
           showActions: true
         }
       }
@@ -216,30 +262,68 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
       }
     }
 
-    // Respostas contextuais baseadas no histórico
+    // Respostas contextuais baseadas no histórico - MODO EXPLORAÇÃO
+    if (conversationMode === 'exploring') {
+      const exploringResponses = [
+        'Obrigado por compartilhar isso comigo. 💙\n\n' +
+        'Cada detalhe que você me conta me ajuda a te entender melhor.\n\n' +
+        'Essas sensações costumam durar muito tempo? Como você geralmente lida com elas?',
+        
+        'Entendo. O que você está sentindo é real e válido. 🌸\n\n' +
+        'Seu corpo está reagindo a algo, e juntos vamos descobrir a melhor forma de te ajudar.\n\n' +
+        'Você já tentou alguma técnica de relaxamento antes? Como foi?',
+        
+        'Estou aqui com você, ouvindo cada palavra. 💙\n\n' +
+        'Às vezes, só de colocar para fora o que sentimos, já alivia um pouco.\n\n' +
+        'Há algo mais que você gostaria de me contar sobre como está se sentindo?',
+        
+        'Você está sendo muito corajoso(a) ao compartilhar isso. 🌟\n\n' +
+        'Reconhecer e falar sobre nossos sentimentos é o primeiro passo para lidar com eles.\n\n' +
+        'O que você acha que poderia te ajudar neste momento?'
+      ]
+      
+      const randomIndex = Math.floor(Math.random() * exploringResponses.length)
+      return {
+        content: exploringResponses[randomIndex],
+        showActions: false
+      }
+    }
+
+    // Respostas iniciais
     if (messageCount <= 2) {
       return {
         content: 'Obrigado por compartilhar isso comigo. 💙\n\n' +
-                 'Você está em um espaço seguro aqui.\n\n' +
-                 'Para eu te ajudar melhor: você já sentiu isso antes ou é a primeira vez?',
+                 'Você está em um espaço seguro aqui. Pode falar tudo no seu tempo.\n\n' +
+                 'Para eu te ajudar melhor: você já sentiu isso antes ou é a primeira vez? E há quanto tempo você está sentindo isso?',
         showActions: false
       }
     }
 
     if (messageCount <= 4) {
       return {
-        content: 'Entendo. Cada sensação que você tem é válida e importante.\n\n' +
+        content: 'Entendo. Cada sensação que você tem é válida e importante. 🌸\n\n' +
                  'Vamos trabalhar juntos para você se sentir melhor.\n\n' +
-                 'Além do que você já me contou, há algo específico que você acha que pode ter causado isso?',
+                 'Me conta: além do que você já descreveu, há algo específico que você acha que pode ter causado ou intensificado essas sensações?',
         showActions: false
       }
     }
 
-    // Resposta empática padrão
+    // Resposta empática padrão com oferta de ações
+    if (messageCount > 6) {
+      setConversationMode('monitoring')
+      return {
+        content: 'Estou aqui com você, ouvindo tudo com atenção. 💙\n\n' +
+                 'Você já me contou bastante, e eu entendo melhor agora o que você está passando.\n\n' +
+                 'Que tal tentarmos algo prático para te ajudar a se sentir melhor? Ou prefere continuar conversando?',
+        showActions: true
+      }
+    }
+
+    // Resposta padrão de escuta ativa
     return {
       content: 'Estou aqui com você, ouvindo tudo com atenção. 💙\n\n' +
                'Suas sensações são reais e importantes.\n\n' +
-               'Continue me contando, no seu tempo. Não há pressa.',
+               'Continue me contando, no seu tempo. Não há pressa. Estou aqui para te ouvir e te ajudar.',
       showActions: false
     }
   }
@@ -291,7 +375,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
     handleSendMessage(response)
   }
 
-  const handleAction = (action: 'contacts' | 'exercise' | 'crisis' | 'breathing' | 'medical') => {
+  const handleAction = (action: 'contacts' | 'exercise' | 'crisis' | 'breathing' | 'medical' | 'continue') => {
     // Adiciona mensagem de transição
     let transitionMessage = ''
     
@@ -311,6 +395,9 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
       case 'medical':
         transitionMessage = 'Lembre-se: procurar ajuda médica é sempre a melhor escolha quando algo não está bem. 💙'
         break
+      case 'continue':
+        transitionMessage = 'Claro! Estou aqui para te ouvir. Continue me contando o que você está sentindo. 💙'
+        break
     }
 
     const confirmMessage: Message = {
@@ -321,22 +408,24 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
     }
     setMessages(prev => [...prev, confirmMessage])
     
-    setTimeout(() => {
-      if (action === 'contacts') {
-        navigate('contacts')
-      } else if (action === 'exercise' || action === 'breathing') {
-        navigate('exercises')
-      } else if (action === 'crisis') {
-        navigate('crisis')
-      }
-    }, 1500)
+    if (action !== 'continue' && action !== 'medical') {
+      setTimeout(() => {
+        if (action === 'contacts') {
+          navigate('contacts')
+        } else if (action === 'exercise' || action === 'breathing') {
+          navigate('exercises')
+        } else if (action === 'crisis') {
+          navigate('crisis')
+        }
+      }, 1500)
+    }
   }
 
   const handleSaveDiary = () => {
     const confirmMessage: Message = {
       id: Date.now().toString(),
       type: 'ai',
-      content: 'Ótima ideia! Registrar seus sentimentos pode te ajudar muito. 📝\n\nVou te levar para o diário agora.',
+      content: 'Ótima ideia! Registrar seus sentimentos pode te ajudar muito a entender melhor o que você está passando. 📝\n\nVou te levar para o diário agora.',
       timestamp: new Date()
     }
     setMessages(prev => [...prev, confirmMessage])
@@ -365,7 +454,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
               <h1 className="text-xl font-semibold text-white">Médico Amigo</h1>
               <p className="text-sm text-white/90 flex items-center gap-1">
                 <Activity className="w-3 h-3" />
-                Aqui para te ouvir
+                Aqui para te ouvir e orientar
               </p>
             </div>
           </div>
@@ -427,6 +516,13 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
                         <Brain className="w-5 h-5" />
                         Fazer exercício de respiração
                       </button>
+                      <button
+                        onClick={() => handleAction('continue')}
+                        className="w-full py-2 px-4 rounded-xl font-medium bg-gradient-to-r from-blue-100 to-purple-100 hover:from-blue-200 hover:to-purple-200 text-gray-700 transition-all flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Quero conversar mais sobre isso
+                      </button>
                     </>
                   )}
 
@@ -446,10 +542,11 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
                         Prefiro registrar no diário
                       </button>
                       <button
-                        onClick={() => setInputValue('Quero continuar conversando')}
-                        className="w-full py-2 px-4 rounded-xl font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
+                        onClick={() => handleAction('continue')}
+                        className="w-full py-2 px-4 rounded-xl font-medium bg-gradient-to-r from-blue-100 to-purple-100 hover:from-blue-200 hover:to-purple-200 text-gray-700 transition-all flex items-center justify-center gap-2"
                       >
-                        Continuar conversando
+                        <MessageCircle className="w-4 h-4" />
+                        Continuar conversando e entendendo
                       </button>
                     </>
                   )}
@@ -521,7 +618,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
         <div className="mt-3 flex items-start gap-2 px-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
           <p className="text-xs leading-relaxed text-gray-500">
-            Este é um suporte emocional. Em caso de emergência ou sintomas graves, procure atendimento médico imediatamente.
+            Este é um suporte emocional e orientação. Em caso de emergência ou sintomas graves, procure atendimento médico imediatamente.
           </p>
         </div>
       </div>
