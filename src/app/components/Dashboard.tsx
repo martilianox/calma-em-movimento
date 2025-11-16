@@ -33,6 +33,18 @@ export function Dashboard({ navigate }: DashboardProps) {
 
   const renderHomeTab = () => (
     <div className="space-y-8">
+      {/* Logo no topo */}
+      <div className="flex justify-center pt-4 pb-2">
+        <img 
+          src="https://k6hrqrxuu8obbfwn.public.blob.vercel-storage.com/temp/04a7671d-26d0-4fad-a540-da6bfed424e4.png" 
+          alt="Calma em Movimento" 
+          className="w-24 h-24 object-contain"
+          style={{
+            filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))'
+          }}
+        />
+      </div>
+
       {/* Saudação */}
       <div className="space-y-6">
         <h1 className="text-2xl font-medium leading-relaxed" style={{ color: '#5C6F82' }}>

@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { User, MapPin, Calendar, Activity, Heart, FileText, ArrowRight, Loader2 } from 'lucide-react'
+import { User, MapPin, Calendar, Activity, Heart, FileText, ArrowRight, Loader2, SkipForward } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface InitialRegistrationProps {
   onComplete: () => void
+  onSkip: () => void
 }
 
-export function InitialRegistration({ onComplete }: InitialRegistrationProps) {
+export function InitialRegistration({ onComplete, onSkip }: InitialRegistrationProps) {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -78,39 +79,49 @@ export function InitialRegistration({ onComplete }: InitialRegistrationProps) {
           throw new Error('Usuário não autenticado')
         }
 
-        // Salvar perfil no Supabase
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .upsert({
-            user_id: user.id,
-            name: formData.name,
-            nickname: formData.nickname,
-            idade: formData.idade,
-            endereco: formData.endereco,
-            cidade: formData.cidade,
-            estado: formData.estado,
-            atividades: formData.atividades,
-            ocupacao: formData.ocupacao,
-            hobbies: formData.hobbies,
-            tempo_ansiedade: formData.tempoAnsiedade,
-            como_comecou: formData.comoComecou,
-            sintomas_principais: formData.sintomasPrincipais,
-            frequencia_crises: formData.frequenciaCrises,
-            gatilhos_conhecidos: formData.gatilhosConhecidos,
-            tratamento_atual: formData.tratamentoAtual,
-            medicamentos: formData.medicamentos,
-            observacoes: formData.observacoes,
-            updated_at: new Date().toISOString()
-          })
+        // Tentar salvar perfil no Supabase
+        try {
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .upsert({
+              user_id: user.id,
+              name: formData.name,
+              nickname: formData.nickname,
+              idade: formData.idade,
+              endereco: formData.endereco,
+              cidade: formData.cidade,
+              estado: formData.estado,
+              atividades: formData.atividades,
+              ocupacao: formData.ocupacao,
+              hobbies: formData.hobbies,
+              tempo_ansiedade: formData.tempoAnsiedade,
+              como_comecou: formData.comoComecou,
+              sintomas_principais: formData.sintomasPrincipais,
+              frequencia_crises: formData.frequenciaCrises,
+              gatilhos_conhecidos: formData.gatilhosConhecidos,
+              tratamento_atual: formData.tratamentoAtual,
+              medicamentos: formData.medicamentos,
+              observacoes: formData.observacoes,
+              updated_at: new Date().toISOString()
+            })
 
-        if (profileError) throw profileError
+          if (profileError) {
+            console.log('Erro ao salvar no banco:', profileError.message)
+            // Continua mesmo se falhar - salva localmente
+          }
+        } catch (dbError) {
+          console.log('Erro de conexão com banco:', dbError)
+          // Continua mesmo se falhar
+        }
 
-        // Também salvar no localStorage como backup
+        // Sempre salvar no localStorage como backup
         localStorage.setItem('userProfile', JSON.stringify(formData))
         
         onComplete()
       } catch (err: any) {
-        setError(err.message || 'Erro ao salvar perfil. Tente novamente.')
+        // Mesmo com erro, salva localmente e continua
+        localStorage.setItem('userProfile', JSON.stringify(formData))
+        onComplete()
       } finally {
         setLoading(false)
       }
@@ -121,6 +132,12 @@ export function InitialRegistration({ onComplete }: InitialRegistrationProps) {
     if (step > 1) {
       setStep(step - 1)
     }
+  }
+
+  const handleSkip = () => {
+    // Salvar indicação de que pulou o cadastro
+    localStorage.setItem('skippedRegistration', 'true')
+    onSkip()
   }
 
   const isStepValid = () => {
@@ -150,6 +167,19 @@ export function InitialRegistration({ onComplete }: InitialRegistrationProps) {
           <p className="text-lg" style={{ color: '#95A8B8' }}>
             Vamos conhecer você melhor para personalizar sua experiência
           </p>
+          
+          {/* Botão Pular Cadastro */}
+          <button
+            onClick={handleSkip}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+            style={{
+              backgroundColor: '#DDE2E6',
+              color: '#5C6F82'
+            }}
+          >
+            <SkipForward className="w-4 h-4" />
+            Pular cadastro e explorar o app
+          </button>
         </div>
 
         {/* Progress Bar */}

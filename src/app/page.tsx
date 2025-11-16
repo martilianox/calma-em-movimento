@@ -61,6 +61,7 @@ export default function Home() {
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([])
   const [showLogo, setShowLogo] = useState(true)
   const [loading, setLoading] = useState(true)
+  const [skipRegistration, setSkipRegistration] = useState(false)
 
   // Verificar autenticação e perfil do usuário
   useEffect(() => {
@@ -107,11 +108,20 @@ export default function Home() {
       
       if (!user) return
 
-      const { data: profile } = await supabase
+      // Tentar buscar perfil
+      const { data: profile, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('user_id', user.id)
         .single()
+
+      // Se houver erro (tabela não existe ou perfil não encontrado)
+      if (error) {
+        console.log('Perfil não encontrado ou tabela não existe:', error.message)
+        setHasProfile(false)
+        setCurrentScreen('initial-registration')
+        return
+      }
 
       if (profile) {
         setHasProfile(true)
@@ -122,6 +132,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Erro ao verificar perfil:', error)
+      setHasProfile(false)
       setCurrentScreen('initial-registration')
     }
   }
@@ -146,6 +157,11 @@ export default function Home() {
     setCurrentScreen('onboarding')
   }
 
+  const handleSkipRegistration = () => {
+    setSkipRegistration(true)
+    setCurrentScreen('onboarding')
+  }
+
   const handleOnboardingComplete = () => {
     setOnboardingComplete(true)
     setCurrentScreen('dashboard')
@@ -167,25 +183,32 @@ export default function Home() {
       
       if (!user) return
 
-      // Salvar no Supabase
-      await supabase
-        .from('diary_entries')
-        .upsert({
-          user_id: user.id,
-          date: entry.date,
-          anxiety_level: entry.anxietyLevel,
-          feelings: entry.feelings,
-          what_feeling: entry.whatFeeling,
-          what_caused: entry.whatCaused,
-          body_reaction: entry.bodyReaction,
-          free_thoughts: entry.freeThoughts
-        })
+      // Tentar salvar no Supabase (se tabela existir)
+      try {
+        await supabase
+          .from('diary_entries')
+          .upsert({
+            user_id: user.id,
+            date: entry.date,
+            anxiety_level: entry.anxietyLevel,
+            feelings: entry.feelings,
+            what_feeling: entry.whatFeeling,
+            what_caused: entry.whatCaused,
+            body_reaction: entry.bodyReaction,
+            free_thoughts: entry.freeThoughts
+          })
+      } catch (dbError) {
+        console.log('Erro ao salvar no banco (tabela pode não existir):', dbError)
+        // Continua mesmo se falhar - salva localmente
+      }
 
       // Atualizar estado local
       setDiaryEntries(prev => [...prev.filter(e => e.date !== entry.date), entry])
       setCurrentScreen('calendar')
     } catch (error) {
       console.error('Erro ao salvar diário:', error)
+      // Mesmo com erro, volta para o calendário
+      setCurrentScreen('calendar')
     }
   }
 
@@ -212,7 +235,10 @@ export default function Home() {
       )}
 
       {currentScreen === 'initial-registration' && (
-        <InitialRegistration onComplete={handleRegistrationComplete} />
+        <InitialRegistration 
+          onComplete={handleRegistrationComplete}
+          onSkip={handleSkipRegistration}
+        />
       )}
 
       {currentScreen === 'onboarding' && (

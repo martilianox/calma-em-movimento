@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 interface AnimatedLogoProps {
   onComplete: () => void
@@ -31,93 +32,25 @@ export function AnimatedLogo({ onComplete }: AnimatedLogoProps) {
       }}
     >
       <div className="flex flex-col items-center gap-8">
-        {/* Logo SVG Animada */}
-        <div className="relative">
-          <svg 
-            width="180" 
-            height="180" 
-            viewBox="0 0 180 180" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-            className="animate-pulse-slow"
-          >
-            {/* Círculo externo - representando calma e completude */}
-            <circle 
-              cx="90" 
-              cy="90" 
-              r="70" 
-              stroke="#5C6F82" 
-              strokeWidth="2" 
-              fill="none"
-              className="animate-draw-circle"
-              style={{
-                strokeDasharray: 440,
-                strokeDashoffset: 440,
-                animation: 'drawCircle 2s ease-out forwards'
-              }}
-            />
-            
-            {/* Ondas de respiração - 3 curvas suaves */}
-            <path 
-              d="M 50 90 Q 70 70, 90 90 T 130 90" 
-              stroke="#83978A" 
-              strokeWidth="3" 
-              fill="none"
-              strokeLinecap="round"
-              className="animate-wave-1"
-              style={{
-                strokeDasharray: 100,
-                strokeDashoffset: 100,
-                animation: 'drawWave 1.5s ease-out 0.5s forwards, breathe 3s ease-in-out 2s infinite'
-              }}
-            />
-            
-            <path 
-              d="M 50 100 Q 70 80, 90 100 T 130 100" 
-              stroke="#A8D5C2" 
-              strokeWidth="3" 
-              fill="none"
-              strokeLinecap="round"
-              className="animate-wave-2"
-              style={{
-                strokeDasharray: 100,
-                strokeDashoffset: 100,
-                animation: 'drawWave 1.5s ease-out 0.7s forwards, breathe 3s ease-in-out 2.2s infinite'
-              }}
-            />
-            
-            <path 
-              d="M 50 110 Q 70 90, 90 110 T 130 110" 
-              stroke="#95A8B8" 
-              strokeWidth="3" 
-              fill="none"
-              strokeLinecap="round"
-              className="animate-wave-3"
-              style={{
-                strokeDasharray: 100,
-                strokeDashoffset: 100,
-                animation: 'drawWave 1.5s ease-out 0.9s forwards, breathe 3s ease-in-out 2.4s infinite'
-              }}
-            />
-
-            {/* Ponto central - representando o "eu" */}
-            <circle 
-              cx="90" 
-              cy="90" 
-              r="8" 
-              fill="#5C6F82"
-              className="animate-scale-in"
-              style={{
-                transform: 'scale(0)',
-                transformOrigin: 'center',
-                animation: 'scaleIn 0.6s ease-out 1.2s forwards'
-              }}
-            />
-          </svg>
+        {/* Logo Oficial Animada */}
+        <div 
+          className="relative animate-fade-in-scale"
+          style={{
+            animation: 'fadeInScale 1.5s ease-out forwards'
+          }}
+        >
+          <img 
+            src="https://k6hrqrxuu8obbfwn.public.blob.vercel-storage.com/temp/04a7671d-26d0-4fad-a540-da6bfed424e4.png" 
+            alt="Calma em Movimento" 
+            className="w-48 h-48 object-contain drop-shadow-2xl"
+            style={{
+              filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.15))'
+            }}
+          />
         </div>
 
         {/* Nome do App */}
-        <div className="text-center space-y-2 animate-fade-in-up" style={{ animationDelay: '1.5s' }}>
+        <div className="text-center space-y-2 animate-fade-in-up" style={{ animationDelay: '1s' }}>
           <h1 
             className="text-3xl font-light tracking-wide"
             style={{ color: '#5C6F82', fontFamily: 'var(--font-inter)' }}
@@ -131,34 +64,44 @@ export function AnimatedLogo({ onComplete }: AnimatedLogoProps) {
             Respire. Sinta. Cuide-se.
           </p>
         </div>
+
+        {/* Indicadores de carregamento */}
+        <div className="flex gap-2 animate-fade-in" style={{ animationDelay: '1.5s' }}>
+          <div 
+            className="w-2 h-2 rounded-full animate-bounce"
+            style={{ 
+              backgroundColor: '#A8D5C2',
+              animationDelay: '0s',
+              animationDuration: '1s'
+            }}
+          />
+          <div 
+            className="w-2 h-2 rounded-full animate-bounce"
+            style={{ 
+              backgroundColor: '#95A8B8',
+              animationDelay: '0.2s',
+              animationDuration: '1s'
+            }}
+          />
+          <div 
+            className="w-2 h-2 rounded-full animate-bounce"
+            style={{ 
+              backgroundColor: '#83978A',
+              animationDelay: '0.4s',
+              animationDuration: '1s'
+            }}
+          />
+        </div>
       </div>
 
       <style jsx>{`
-        @keyframes drawCircle {
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
           to {
-            stroke-dashoffset: 0;
-          }
-        }
-
-        @keyframes drawWave {
-          to {
-            stroke-dashoffset: 0;
-          }
-        }
-
-        @keyframes breathe {
-          0%, 100% {
-            opacity: 0.6;
-            transform: translateY(0);
-          }
-          50% {
             opacity: 1;
-            transform: translateY(-3px);
-          }
-        }
-
-        @keyframes scaleIn {
-          to {
             transform: scale(1);
           }
         }
@@ -174,8 +117,18 @@ export function AnimatedLogo({ onComplete }: AnimatedLogoProps) {
           }
         }
 
-        .animate-pulse-slow {
-          animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        .animate-fade-in-scale {
+          opacity: 0;
+          animation: fadeInScale 1.5s ease-out forwards;
         }
 
         .animate-fade-in-up {
@@ -183,13 +136,9 @@ export function AnimatedLogo({ onComplete }: AnimatedLogoProps) {
           animation: fadeInUp 0.8s ease-out forwards;
         }
 
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.8;
-          }
+        .animate-fade-in {
+          opacity: 0;
+          animation: fadeIn 0.8s ease-out forwards;
         }
       `}</style>
     </div>
