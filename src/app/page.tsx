@@ -15,6 +15,7 @@ import { ContentLibrary } from './components/ContentLibrary'
 import { WeeklyReport } from './components/WeeklyReport'
 import { EmergencyContacts } from './components/EmergencyContacts'
 import { EmotionalDialogue } from './components/EmotionalDialogue'
+import { MedicoAmigo } from './components/MedicoAmigo'
 import EmotionalCalendar from './components/EmotionalCalendar'
 import DailyDiary from './components/DailyDiary'
 import AnxietyGraph from './components/AnxietyGraph'
@@ -36,6 +37,7 @@ export type Screen =
   | 'emotional-dialogue-pre'
   | 'emotional-dialogue-during'
   | 'emotional-dialogue-post'
+  | 'medico-amigo'
   | 'calendar'
   | 'diary'
   | 'graph'
@@ -287,6 +289,10 @@ export default function Home() {
 
       {currentScreen === 'emotional-dialogue-post' && (
         <EmotionalDialogue navigate={navigate} phase="post" />
+      )}
+
+      {currentScreen === 'medico-amigo' && (
+        <MedicoAmigo navigate={navigate} />
       )}
 
       {currentScreen === 'calendar' && (

@@ -1,6 +1,6 @@
 'use client'
 
-import { Heart, Wind, BookOpen, Calendar, Home as HomeIcon, Sparkles, GraduationCap, Lightbulb, Brain } from 'lucide-react'
+import { Heart, Wind, BookOpen, Calendar, Home as HomeIcon, Sparkles, GraduationCap, Lightbulb, Brain, Stethoscope } from 'lucide-react'
 import type { Screen } from '../page'
 import { useEffect, useState } from 'react'
 
@@ -92,71 +92,30 @@ export function Dashboard({ navigate }: DashboardProps) {
         </div>
       </div>
 
-      {/* Ações principais com feedback visual aprimorado */}
-      <div className="space-y-3">
-        <button
-          onClick={() => navigate('register')}
-          className="w-full p-5 rounded-3xl text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] group"
-          style={{ 
-            backgroundColor: '#A8D5C2',
-            boxShadow: '0 2px 12px rgba(168, 213, 194, 0.15)'
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h3 className="font-semibold text-base mb-1.5 group-hover:translate-x-1 transition-transform duration-300" style={{ color: '#5C6F82' }}>
-                Como você está agora?
-              </h3>
-              <p className="text-sm leading-relaxed" style={{ color: '#5C6F82', opacity: 0.8 }}>
-                Registre este momento
-              </p>
-            </div>
-            <Sparkles className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity duration-300" style={{ color: '#5C6F82' }} />
+      {/* Botão único do Médico Amigo */}
+      <button
+        onClick={() => navigate('medico-amigo')}
+        className="w-full p-6 rounded-3xl text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] group"
+        style={{ 
+          backgroundColor: '#83978A',
+          boxShadow: '0 4px 20px rgba(131, 151, 138, 0.25)'
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h3 className="font-semibold text-lg mb-2 group-hover:translate-x-1 transition-transform duration-300 text-white">
+              Médico Amigo
+            </h3>
+            <p className="text-sm leading-relaxed text-white/90">
+              Conversar agora com IA de acolhimento
+            </p>
           </div>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('exercises')}
-          className="w-full p-5 rounded-3xl text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] group"
-          style={{ 
-            backgroundColor: '#F3EDE7',
-            boxShadow: '0 2px 12px rgba(243, 237, 231, 0.15)'
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h3 className="font-semibold text-base mb-1.5 group-hover:translate-x-1 transition-transform duration-300" style={{ color: '#5C6F82' }}>
-                Fazer um exercício
-              </h3>
-              <p className="text-sm leading-relaxed" style={{ color: '#5C6F82', opacity: 0.8 }}>
-                Respiração, relaxamento, sono
-              </p>
-            </div>
-            <Wind className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity duration-300" style={{ color: '#5C6F82' }} />
+          <div className="flex items-center gap-2">
+            <Stethoscope className="w-6 h-6 opacity-90 group-hover:opacity-100 transition-opacity duration-300 text-white" />
+            <Heart className="w-5 h-5 opacity-90 group-hover:opacity-100 transition-opacity duration-300 text-white animate-pulse" />
           </div>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('diary')}
-          className="w-full p-5 rounded-3xl text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] group"
-          style={{ 
-            backgroundColor: '#DDE2E6',
-            boxShadow: '0 2px 12px rgba(221, 226, 230, 0.15)'
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h3 className="font-semibold text-base mb-1.5 group-hover:translate-x-1 transition-transform duration-300" style={{ color: '#5C6F82' }}>
-                Ver meu diário
-              </h3>
-              <p className="text-sm leading-relaxed" style={{ color: '#5C6F82', opacity: 0.8 }}>
-                Acompanhe sua jornada
-              </p>
-            </div>
-            <BookOpen className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity duration-300" style={{ color: '#5C6F82' }} />
-          </div>
-        </button>
-      </div>
+        </div>
+      </button>
 
       {/* Seção de Conteúdos Educativos */}
       <div className="space-y-3">
