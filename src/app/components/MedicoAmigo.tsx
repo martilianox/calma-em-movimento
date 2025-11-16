@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ArrowLeft, Send, Heart, AlertCircle, BookOpen, Activity, Loader2 } from 'lucide-react'
-import { Screen } from '../page'
-import { supabase } from '@/lib/supabase'
+import { ArrowLeft, Send, Heart, Phone, AlertCircle, Activity, Brain, Dumbbell } from 'lucide-react'
+import type { Screen } from '../page'
 
 interface MedicoAmigoProps {
   navigate: (screen: Screen) => void
@@ -11,461 +10,518 @@ interface MedicoAmigoProps {
 
 interface Message {
   id: string
-  text: string
-  sender: 'user' | 'bot'
+  type: 'user' | 'ai'
+  content: string
   timestamp: Date
-  sentiment?: 'anxious' | 'fearful' | 'calm' | 'neutral'
-  symptomsDetected?: string[]
-  suggestions?: {
-    type: 'exercise' | 'education' | 'medical'
-    content: string
-  }[]
+  showActions?: boolean
+  isTyping?: boolean
+  severity?: 'low' | 'medium' | 'high' | 'emergency'
 }
 
-// Sistema de análise de sintomas e emoções
-const analyzeMessage = (text: string): {
-  sentiment: 'anxious' | 'fearful' | 'calm' | 'neutral'
-  symptomsDetected: string[]
-  urgencyLevel: 'low' | 'medium' | 'high'
-} => {
-  const lowerText = text.toLowerCase()
-  
-  // Palavras-chave de emoções
-  const anxiousKeywords = ['ansioso', 'nervoso', 'preocupado', 'estressado', 'tenso', 'inquieto']
-  const fearKeywords = ['medo', 'pânico', 'terror', 'assustado', 'apavorado', 'receio']
-  const calmKeywords = ['calmo', 'tranquilo', 'relaxado', 'bem', 'melhor', 'aliviado']
-  
-  // Sintomas físicos
-  const symptoms = {
-    'coração acelerado': ['coração', 'acelerado', 'taquicardia', 'palpitação'],
-    'falta de ar': ['falta de ar', 'respirar', 'sufocando', 'ar', 'respiração'],
-    'tremores': ['tremor', 'tremendo', 'tremer', 'tremedeira'],
-    'suor excessivo': ['suor', 'suando', 'transpiração'],
-    'tontura': ['tontura', 'tonto', 'vertigem', 'zonzo'],
-    'náusea': ['náusea', 'enjoo', 'vomitar', 'estômago'],
-    'aperto no peito': ['peito', 'aperto', 'pressão no peito'],
-    'formigamento': ['formigamento', 'dormência', 'formigando'],
-    'dor de cabeça': ['dor de cabeça', 'cefaleia', 'enxaqueca']
-  }
-  
-  // Detectar sentimento
-  let sentiment: 'anxious' | 'fearful' | 'calm' | 'neutral' = 'neutral'
-  if (fearKeywords.some(keyword => lowerText.includes(keyword))) {
-    sentiment = 'fearful'
-  } else if (anxiousKeywords.some(keyword => lowerText.includes(keyword))) {
-    sentiment = 'anxious'
-  } else if (calmKeywords.some(keyword => lowerText.includes(keyword))) {
-    sentiment = 'calm'
-  }
-  
-  // Detectar sintomas
-  const symptomsDetected: string[] = []
-  Object.entries(symptoms).forEach(([symptom, keywords]) => {
-    if (keywords.some(keyword => lowerText.includes(keyword))) {
-      symptomsDetected.push(symptom)
-    }
-  })
-  
-  // Calcular urgência
-  let urgencyLevel: 'low' | 'medium' | 'high' = 'low'
-  if (sentiment === 'fearful' || symptomsDetected.length >= 3) {
-    urgencyLevel = 'high'
-  } else if (sentiment === 'anxious' || symptomsDetected.length >= 1) {
-    urgencyLevel = 'medium'
-  }
-  
-  return { sentiment, symptomsDetected, urgencyLevel }
+interface SymptomAnalysis {
+  severity: 'low' | 'medium' | 'high' | 'emergency'
+  symptoms: string[]
+  recommendation: 'exercise' | 'breathing' | 'medical' | 'emergency'
+  confidence: number
 }
 
-// Gerar resposta empática e personalizada
-const generateResponse = (
-  userMessage: string,
-  analysis: ReturnType<typeof analyzeMessage>
-): Message => {
-  const { sentiment, symptomsDetected, urgencyLevel } = analysis
-  
-  let responseText = ''
-  let suggestions: Message['suggestions'] = []
-  
-  // Respostas empáticas baseadas no sentimento
-  if (sentiment === 'fearful') {
-    responseText = `Eu entendo que você está sentindo muito medo agora, e isso é completamente válido. O medo é uma resposta natural do nosso corpo, mas vamos trabalhar juntos para você se sentir mais seguro. `
-    
-    if (symptomsDetected.length > 0) {
-      responseText += `\n\nPercebo que você está sentindo: ${symptomsDetected.join(', ')}. Esses sintomas, embora assustadores, são manifestações da ansiedade e não representam perigo real para sua saúde. `
-    }
-    
-    suggestions = [
-      {
-        type: 'exercise',
-        content: 'Vamos fazer um exercício de respiração 4-7-8 agora? Ele pode ajudar a acalmar seu sistema nervoso rapidamente.'
-      },
-      {
-        type: 'education',
-        content: 'Gostaria de entender melhor por que seu corpo reage assim? Posso explicar de forma simples.'
-      }
-    ]
-    
-    if (urgencyLevel === 'high') {
-      suggestions.push({
-        type: 'medical',
-        content: 'Se os sintomas estiverem muito intensos ou persistirem, considere buscar atendimento médico ou ligar para um serviço de emergência.'
-      })
-    }
-  } else if (sentiment === 'anxious') {
-    responseText = `Percebo que você está ansioso, e quero que saiba que estou aqui para te apoiar. A ansiedade pode ser desconfortável, mas existem formas de lidar com ela. `
-    
-    if (symptomsDetected.length > 0) {
-      responseText += `\n\nVocê mencionou: ${symptomsDetected.join(', ')}. Vamos trabalhar juntos para aliviar esses sintomas. `
-    }
-    
-    suggestions = [
-      {
-        type: 'exercise',
-        content: 'Que tal experimentar uma técnica de relaxamento muscular progressivo? Pode ajudar bastante.'
-      },
-      {
-        type: 'education',
-        content: 'Posso te explicar o que está acontecendo no seu corpo quando você sente ansiedade.'
-      }
-    ]
-  } else if (sentiment === 'calm') {
-    responseText = `Que bom saber que você está se sentindo melhor! É importante reconhecer esses momentos de calma. `
-    
-    suggestions = [
-      {
-        type: 'education',
-        content: 'Gostaria de aprender técnicas para manter essa sensação de bem-estar?'
-      },
-      {
-        type: 'exercise',
-        content: 'Posso te ensinar exercícios preventivos para usar no dia a dia.'
-      }
-    ]
-  } else {
-    responseText = `Estou aqui para conversar e te ajudar. Pode me contar mais sobre como você está se sentindo? `
-    
-    if (symptomsDetected.length > 0) {
-      responseText += `\n\nNotei que você mencionou: ${symptomsDetected.join(', ')}. Vamos conversar sobre isso. `
-      
-      suggestions = [
-        {
-          type: 'education',
-          content: 'Gostaria de entender melhor esses sintomas?'
-        },
-        {
-          type: 'exercise',
-          content: 'Posso te mostrar técnicas para aliviar esses sintomas.'
-        }
-      ]
-    }
-  }
-  
-  // Adicionar informações educativas sobre sintomas específicos
-  if (symptomsDetected.includes('coração acelerado')) {
-    responseText += `\n\n💙 **Sobre o coração acelerado:** Quando você fica ansioso, seu corpo libera adrenalina, que faz o coração bater mais rápido. É uma resposta de "luta ou fuga" - seu corpo está se preparando para uma ameaça, mesmo que não haja perigo real. Isso é desconfortável, mas não é perigoso.`
-  }
-  
-  if (symptomsDetected.includes('falta de ar')) {
-    responseText += `\n\n🌬️ **Sobre a falta de ar:** A sensação de falta de ar geralmente vem da respiração rápida e superficial (hiperventilação). Seu corpo está recebendo oxigênio suficiente, mas a forma como você está respirando cria essa sensação. Exercícios de respiração podem ajudar muito.`
-  }
-  
-  if (symptomsDetected.includes('tremores')) {
-    responseText += `\n\n🤝 **Sobre os tremores:** Os tremores acontecem porque seus músculos estão tensos e recebendo mais energia do que o normal. É o corpo se preparando para ação. Técnicas de relaxamento muscular podem aliviar isso.`
-  }
-  
-  return {
-    id: Date.now().toString(),
-    text: responseText,
-    sender: 'bot',
-    timestamp: new Date(),
-    sentiment,
-    symptomsDetected,
-    suggestions
-  }
-}
+const QUICK_RESPONSES = [
+  "Meu coração está acelerado",
+  "Estou com muito medo",
+  "Sinto falta de ar",
+  "Estou com tontura",
+  "Preciso de exercícios",
+  "Quero conversar"
+]
+
+// Palavras-chave para análise de severidade
+const EMERGENCY_KEYWORDS = [
+  'desmaiar', 'desmaiando', 'peito dói muito', 'dor no peito forte', 
+  'não consigo respirar', 'sufocando', 'morrer', 'morrendo',
+  'infarto', 'ataque cardíaco', 'coração dói muito', 'dormência no braço',
+  'visão escura', 'perdendo consciência', 'convulsão'
+]
+
+const HIGH_SEVERITY_KEYWORDS = [
+  'peito dói', 'coração dói', 'dor no peito', 'muito mal',
+  'não aguento', 'desespero', 'pânico intenso', 'muito forte',
+  'pior da vida', 'nunca senti assim', 'fora de controle'
+]
+
+const MEDIUM_SEVERITY_KEYWORDS = [
+  'ansiedade', 'nervoso', 'preocupado', 'estresse', 'medo',
+  'coração acelerado', 'taquicardia', 'tremendo', 'suando',
+  'tontura', 'enjoo', 'mal estar', 'agitado'
+]
+
+const EXERCISE_KEYWORDS = [
+  'exercício', 'exercicios', 'respiração', 'respirar', 'acalmar',
+  'relaxar', 'técnica', 'meditação', 'alongamento', 'movimento'
+]
 
 export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Olá! Eu sou o Médico Amigo, seu companheiro de apoio emocional. 💙\n\nEstou aqui para te ouvir, entender o que você está sentindo e te ajudar a lidar com a ansiedade. Pode me contar como você está se sentindo agora?',
-      sender: 'bot',
-      timestamp: new Date()
+      type: 'ai',
+      content: 'Oi, eu sou o Médico Amigo. 💙\n\nEstou aqui para te ouvir e te ajudar.\n\nMe conta: como você está se sentindo agora?',
+      timestamp: new Date(),
+      showActions: false
     }
   ])
-  const [inputText, setInputText] = useState('')
+  const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [conversationContext, setConversationContext] = useState<string[]>([])
+  const [userSymptoms, setUserSymptoms] = useState<string[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    scrollToBottom()
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  useEffect(() => {
-    loadConversationHistory()
-  }, [])
+  // Análise inteligente de sintomas
+  const analyzeSymptoms = (text: string, context: string[]): SymptomAnalysis => {
+    const lowerText = text.toLowerCase()
+    const fullContext = [...context, lowerText].join(' ')
+    
+    let severity: 'low' | 'medium' | 'high' | 'emergency' = 'low'
+    let recommendation: 'exercise' | 'breathing' | 'medical' | 'emergency' = 'exercise'
+    const symptoms: string[] = []
+    let confidence = 0
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    // Verifica emergência
+    const hasEmergency = EMERGENCY_KEYWORDS.some(keyword => {
+      if (lowerText.includes(keyword)) {
+        symptoms.push(keyword)
+        return true
+      }
+      return false
+    })
+
+    if (hasEmergency) {
+      severity = 'emergency'
+      recommendation = 'emergency'
+      confidence = 0.95
+      return { severity, symptoms, recommendation, confidence }
+    }
+
+    // Verifica alta severidade
+    const highSeverityCount = HIGH_SEVERITY_KEYWORDS.filter(keyword => {
+      if (lowerText.includes(keyword)) {
+        symptoms.push(keyword)
+        return true
+      }
+      return false
+    }).length
+
+    if (highSeverityCount >= 2) {
+      severity = 'high'
+      recommendation = 'medical'
+      confidence = 0.85
+    } else if (highSeverityCount >= 1) {
+      severity = 'medium'
+      recommendation = 'breathing'
+      confidence = 0.7
+    }
+
+    // Verifica média severidade
+    const mediumSeverityCount = MEDIUM_SEVERITY_KEYWORDS.filter(keyword => {
+      if (lowerText.includes(keyword)) {
+        symptoms.push(keyword)
+        return true
+      }
+      return false
+    }).length
+
+    if (mediumSeverityCount >= 3 && severity === 'low') {
+      severity = 'medium'
+      recommendation = 'breathing'
+      confidence = 0.75
+    } else if (mediumSeverityCount >= 1 && severity === 'low') {
+      severity = 'low'
+      recommendation = 'exercise'
+      confidence = 0.6
+    }
+
+    // Verifica se usuário pede exercícios diretamente
+    const asksForExercise = EXERCISE_KEYWORDS.some(keyword => lowerText.includes(keyword))
+    if (asksForExercise && severity !== 'emergency' && severity !== 'high') {
+      recommendation = 'exercise'
+      confidence = 0.9
+    }
+
+    // Ajusta confiança baseado no contexto
+    if (context.length > 3) {
+      confidence = Math.min(confidence + 0.1, 0.95)
+    }
+
+    return { severity, symptoms, recommendation, confidence }
   }
 
-  const loadConversationHistory = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) return
+  // Gera resposta inteligente baseada na análise
+  const generateIntelligentResponse = (
+    userMessage: string, 
+    analysis: SymptomAnalysis,
+    messageCount: number
+  ): { content: string; showActions: boolean } => {
+    const { severity, recommendation, symptoms } = analysis
 
-      const { data, error } = await supabase
-        .from('medico_amigo_conversations')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (error) {
-        console.log('Erro ao carregar histórico:', error.message)
-        return
+    // EMERGÊNCIA - Resposta imediata
+    if (severity === 'emergency') {
+      return {
+        content: '🚨 ATENÇÃO: Os sintomas que você descreveu precisam de avaliação médica URGENTE.\n\n' +
+                 'Por favor, procure atendimento de emergência IMEDIATAMENTE ou ligue para 192 (SAMU).\n\n' +
+                 'Não espere. Sua segurança é prioridade.\n\n' +
+                 'Posso abrir seus contatos de emergência?',
+        showActions: true
       }
+    }
 
-      if (data && data.length > 0) {
-        // Carregar últimas mensagens do histórico
-        const historyMessages: Message[] = data.reverse().flatMap(conv => [
-          {
-            id: `user-${conv.id}`,
-            text: conv.message,
-            sender: 'user' as const,
-            timestamp: new Date(conv.created_at)
-          },
-          {
-            id: `bot-${conv.id}`,
-            text: conv.response,
-            sender: 'bot' as const,
-            timestamp: new Date(conv.created_at),
-            sentiment: conv.sentiment as any,
-            symptomsDetected: conv.symptoms_detected || []
-          }
-        ])
-
-        setMessages(prev => [...prev, ...historyMessages])
+    // ALTA SEVERIDADE - Recomenda atendimento médico
+    if (severity === 'high') {
+      return {
+        content: '⚠️ Entendo que você está passando por algo intenso.\n\n' +
+                 'Pelos sintomas que você descreveu, eu recomendo fortemente que você procure atendimento médico hoje mesmo.\n\n' +
+                 'Enquanto isso, posso te ajudar com técnicas de respiração para aliviar um pouco o desconforto.\n\n' +
+                 'O que você prefere fazer agora?',
+        showActions: true
       }
-    } catch (error) {
-      console.log('Erro ao carregar histórico:', error)
+    }
+
+    // MÉDIA SEVERIDADE - Oferece suporte e exercícios
+    if (severity === 'medium') {
+      if (recommendation === 'breathing') {
+        return {
+          content: 'Eu entendo o que você está sentindo. 💙\n\n' +
+                   'Esses sintomas são comuns em momentos de ansiedade, mas podemos trabalhar juntos para aliviar.\n\n' +
+                   'Vou te ensinar uma técnica de respiração que pode ajudar muito agora.\n\n' +
+                   'Quer tentar comigo?',
+          showActions: true
+        }
+      }
+    }
+
+    // BAIXA SEVERIDADE ou PEDIDO DE EXERCÍCIOS
+    if (recommendation === 'exercise') {
+      return {
+        content: 'Ótimo! Exercícios podem te ajudar muito nesse momento. 🌟\n\n' +
+                 'Temos várias opções:\n' +
+                 '• Respiração guiada\n' +
+                 '• Relaxamento muscular\n' +
+                 '• Meditação rápida\n' +
+                 '• Alongamento suave\n\n' +
+                 'Vou te levar para os exercícios agora, tudo bem?',
+        showActions: true
+      }
+    }
+
+    // Respostas contextuais baseadas no histórico
+    if (messageCount <= 2) {
+      return {
+        content: 'Obrigado por compartilhar isso comigo. 💙\n\n' +
+                 'Você está em um espaço seguro aqui.\n\n' +
+                 'Para eu te ajudar melhor: você já sentiu isso antes ou é a primeira vez?',
+        showActions: false
+      }
+    }
+
+    if (messageCount <= 4) {
+      return {
+        content: 'Entendo. Cada sensação que você tem é válida e importante.\n\n' +
+                 'Vamos trabalhar juntos para você se sentir melhor.\n\n' +
+                 'Além do que você já me contou, há algo específico que você acha que pode ter causado isso?',
+        showActions: false
+      }
+    }
+
+    // Resposta empática padrão
+    return {
+      content: 'Estou aqui com você, ouvindo tudo com atenção. 💙\n\n' +
+               'Suas sensações são reais e importantes.\n\n' +
+               'Continue me contando, no seu tempo. Não há pressa.',
+      showActions: false
     }
   }
 
-  const saveConversation = async (userMessage: string, botResponse: Message) => {
-    setIsSaving(true)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) return
+  const handleSendMessage = async (text: string) => {
+    if (!text.trim()) return
 
-      await supabase
-        .from('medico_amigo_conversations')
-        .insert({
-          user_id: user.id,
-          message: userMessage,
-          response: botResponse.text,
-          sentiment: botResponse.sentiment,
-          symptoms_detected: botResponse.symptomsDetected || []
-        })
-    } catch (error) {
-      console.log('Erro ao salvar conversa:', error)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleSend = async () => {
-    if (!inputText.trim() || isTyping) return
-
+    // Adiciona mensagem do usuário
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputText,
-      sender: 'user',
+      type: 'user',
+      content: text,
       timestamp: new Date()
     }
-
+    
     setMessages(prev => [...prev, userMessage])
-    setInputText('')
+    setInputValue('')
+
+    // Atualiza contexto da conversa
+    const newContext = [...conversationContext, text]
+    setConversationContext(newContext)
+
+    // Analisa sintomas
+    const analysis = analyzeSymptoms(text, conversationContext)
+    setUserSymptoms(prev => [...new Set([...prev, ...analysis.symptoms])])
+
+    // Simula digitação da IA
     setIsTyping(true)
-
-    // Simular digitação
+    
     setTimeout(() => {
-      const analysis = analyzeMessage(inputText)
-      const botResponse = generateResponse(inputText, analysis)
-      
-      setMessages(prev => [...prev, botResponse])
       setIsTyping(false)
-
-      // Salvar no Supabase
-      saveConversation(inputText, botResponse)
       
-      // Focar no input novamente
-      inputRef.current?.focus()
+      const response = generateIntelligentResponse(text, analysis, messages.length)
+      
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: response.content,
+        timestamp: new Date(),
+        showActions: response.showActions,
+        severity: analysis.severity
+      }
+      
+      setMessages(prev => [...prev, aiMessage])
+    }, 1800)
+  }
+
+  const handleQuickResponse = (response: string) => {
+    handleSendMessage(response)
+  }
+
+  const handleAction = (action: 'contacts' | 'exercise' | 'crisis' | 'breathing' | 'medical') => {
+    // Adiciona mensagem de transição
+    let transitionMessage = ''
+    
+    switch (action) {
+      case 'contacts':
+        transitionMessage = 'Abrindo seus contatos de emergência agora. 📞'
+        break
+      case 'exercise':
+        transitionMessage = 'Perfeito! Vou te levar para os exercícios. 🌟'
+        break
+      case 'crisis':
+        transitionMessage = 'Ativando o Modo Crise para te ajudar agora. 🆘'
+        break
+      case 'breathing':
+        transitionMessage = 'Vamos respirar juntos. Isso vai te ajudar. 🌬️'
+        break
+      case 'medical':
+        transitionMessage = 'Lembre-se: procurar ajuda médica é sempre a melhor escolha quando algo não está bem. 💙'
+        break
+    }
+
+    const confirmMessage: Message = {
+      id: Date.now().toString(),
+      type: 'ai',
+      content: transitionMessage,
+      timestamp: new Date()
+    }
+    setMessages(prev => [...prev, confirmMessage])
+    
+    setTimeout(() => {
+      if (action === 'contacts') {
+        navigate('contacts')
+      } else if (action === 'exercise' || action === 'breathing') {
+        navigate('exercises')
+      } else if (action === 'crisis') {
+        navigate('crisis')
+      }
     }, 1500)
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
+  const handleSaveDiary = () => {
+    const confirmMessage: Message = {
+      id: Date.now().toString(),
+      type: 'ai',
+      content: 'Ótima ideia! Registrar seus sentimentos pode te ajudar muito. 📝\n\nVou te levar para o diário agora.',
+      timestamp: new Date()
     }
-  }
-
-  const handleSuggestionClick = (suggestion: Message['suggestions'][0]) => {
-    if (suggestion.type === 'exercise') {
-      navigate('exercises')
-    } else if (suggestion.type === 'education') {
-      navigate('library')
-    }
+    setMessages(prev => [...prev, confirmMessage])
+    
+    setTimeout(() => {
+      navigate('calendar')
+    }, 1500)
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F7F9FA' }}>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       {/* Header */}
-      <div className="sticky top-0 z-10 px-6 py-4 shadow-sm" style={{ backgroundColor: '#FFFFFF' }}>
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
+      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 p-6 shadow-lg">
+        <div className="flex items-center gap-4">
           <button
             onClick={() => navigate('dashboard')}
-            className="p-2 rounded-xl transition-colors hover:bg-opacity-80"
-            style={{ backgroundColor: '#F7F9FA' }}
+            className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all"
           >
-            <ArrowLeft className="w-6 h-6" style={{ color: '#5C6F82' }} />
+            <ArrowLeft className="w-5 h-5 text-white" />
           </button>
-          
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#C7DDF2' }}>
-              <Heart className="w-5 h-5" style={{ color: '#5C6F82' }} />
+            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <Heart className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold" style={{ color: '#5C6F82' }}>
-                Médico Amigo
-              </h1>
-              <p className="text-xs" style={{ color: '#95A8B8' }}>
-                {isTyping ? 'Digitando...' : 'Online'}
+              <h1 className="text-xl font-semibold text-white">Médico Amigo</h1>
+              <p className="text-sm text-white/90 flex items-center gap-1">
+                <Activity className="w-3 h-3" />
+                Aqui para te ouvir
               </p>
             </div>
           </div>
-          
-          <div className="w-10" /> {/* Spacer para centralizar */}
         </div>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="max-w-4xl mx-auto space-y-4">
-          {messages.map((message) => (
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
             <div
-              key={message.id}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 shadow-lg ${
+                message.type === 'user'
+                  ? 'bg-gradient-to-br from-blue-400 to-blue-500 text-white rounded-br-sm'
+                  : 'bg-white text-gray-800 rounded-bl-sm'
+              }`}
             >
-              <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.sender === 'user' ? 'rounded-br-none' : 'rounded-bl-none'
-                }`}
-                style={{
-                  backgroundColor: message.sender === 'user' ? '#A8D5C2' : '#FFFFFF',
-                  color: message.sender === 'user' ? '#FFFFFF' : '#5C6F82'
-                }}
-              >
-                <p className="text-sm whitespace-pre-line">{message.text}</p>
-                
-                {/* Sugestões */}
-                {message.suggestions && message.suggestions.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {message.suggestions.map((suggestion, index) => (
+              <p className="text-base leading-relaxed whitespace-pre-line">
+                {message.content}
+              </p>
+              
+              {/* Ações baseadas na severidade */}
+              {message.showActions && (
+                <div className="mt-4 space-y-2">
+                  {message.severity === 'emergency' && (
+                    <>
                       <button
-                        key={index}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="w-full text-left px-4 py-3 rounded-xl text-sm transition-all hover:opacity-80 flex items-center gap-2"
-                        style={{
-                          backgroundColor: '#F7F9FA',
-                          color: '#5C6F82'
-                        }}
+                        onClick={() => handleAction('contacts')}
+                        className="w-full py-3 px-4 rounded-xl font-semibold bg-red-500 hover:bg-red-600 text-white transition-all flex items-center justify-center gap-2"
                       >
-                        {suggestion.type === 'exercise' && <Activity className="w-4 h-4" />}
-                        {suggestion.type === 'education' && <BookOpen className="w-4 h-4" />}
-                        {suggestion.type === 'medical' && <AlertCircle className="w-4 h-4" />}
-                        {suggestion.content}
+                        <Phone className="w-5 h-5" />
+                        Abrir Contatos de Emergência
                       </button>
-                    ))}
-                  </div>
-                )}
-                
-                <p className="text-xs mt-2 opacity-70">
-                  {message.timestamp.toLocaleTimeString('pt-BR', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </p>
-              </div>
-            </div>
-          ))}
-          
-          {isTyping && (
-            <div className="flex justify-start">
-              <div
-                className="max-w-[80%] rounded-2xl rounded-bl-none px-4 py-3"
-                style={{ backgroundColor: '#FFFFFF' }}
-              >
-                <div className="flex gap-2">
-                  <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#A8D5C2', animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#A8D5C2', animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#A8D5C2', animationDelay: '300ms' }} />
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
+                      <button
+                        onClick={() => handleAction('crisis')}
+                        className="w-full py-3 px-4 rounded-xl font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-all"
+                      >
+                        Ativar Modo Crise
+                      </button>
+                    </>
+                  )}
 
-      {/* Input Area */}
-      <div className="sticky bottom-0 px-4 py-4 shadow-lg" style={{ backgroundColor: '#FFFFFF' }}>
-        <div className="max-w-4xl mx-auto">
-          <div className="flex gap-2 items-end">
-            <div className="flex-1 relative">
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Digite sua mensagem..."
-                disabled={isTyping}
-                className="w-full px-4 py-3 pr-12 rounded-2xl border-2 focus:outline-none focus:border-opacity-100 transition-colors disabled:opacity-50"
-                style={{
-                  backgroundColor: '#F7F9FA',
-                  borderColor: '#DDE2E6',
-                  color: '#5C6F82'
-                }}
-              />
-              {isSaving && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#95A8B8' }} />
+                  {message.severity === 'high' && (
+                    <>
+                      <button
+                        onClick={() => handleAction('medical')}
+                        className="w-full py-3 px-4 rounded-xl font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-all flex items-center justify-center gap-2"
+                      >
+                        <AlertCircle className="w-5 h-5" />
+                        Entendi, vou procurar ajuda médica
+                      </button>
+                      <button
+                        onClick={() => handleAction('breathing')}
+                        className="w-full py-3 px-4 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all flex items-center justify-center gap-2"
+                      >
+                        <Brain className="w-5 h-5" />
+                        Fazer exercício de respiração
+                      </button>
+                    </>
+                  )}
+
+                  {(message.severity === 'medium' || message.severity === 'low' || !message.severity) && (
+                    <>
+                      <button
+                        onClick={() => handleAction('exercise')}
+                        className="w-full py-3 px-4 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all flex items-center justify-center gap-2"
+                      >
+                        <Dumbbell className="w-5 h-5" />
+                        Sim, vamos aos exercícios
+                      </button>
+                      <button
+                        onClick={handleSaveDiary}
+                        className="w-full py-3 px-4 rounded-xl font-semibold bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white transition-all"
+                      >
+                        Prefiro registrar no diário
+                      </button>
+                      <button
+                        onClick={() => setInputValue('Quero continuar conversando')}
+                        className="w-full py-2 px-4 rounded-xl font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
+                      >
+                        Continuar conversando
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
-            <button
-              onClick={handleSend}
-              disabled={!inputText.trim() || isTyping}
-              className="p-3 rounded-2xl transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: '#A8D5C2'
-              }}
-            >
-              <Send className="w-6 h-6" style={{ color: '#FFFFFF' }} />
-            </button>
           </div>
-          
-          {/* Info */}
-          <p className="text-xs text-center mt-2" style={{ color: '#95A8B8' }}>
-            O Médico Amigo não substitui atendimento médico profissional
+        ))}
+
+        {/* Typing indicator */}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="bg-white rounded-2xl rounded-bl-sm p-4 shadow-lg">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 rounded-full bg-pink-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quick responses */}
+        {messages.length === 1 && (
+          <div className="space-y-2 pt-2">
+            <p className="text-sm text-center text-gray-500 font-medium">
+              Ou escolha uma opção rápida:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {QUICK_RESPONSES.map((response, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuickResponse(response)}
+                  className="py-3 px-4 rounded-xl font-medium bg-white hover:bg-gray-50 text-gray-700 shadow-md hover:shadow-lg transition-all text-left"
+                >
+                  {response}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="p-4 bg-white border-t border-gray-200 shadow-lg">
+        <div className="flex gap-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(inputValue)}
+            placeholder="Digite como você está se sentindo..."
+            className="flex-1 px-4 py-3 sm:py-4 rounded-xl border-2 border-purple-200 focus:outline-none focus:border-purple-400 text-base bg-gray-50 text-gray-800 placeholder-gray-400"
+            disabled={isTyping}
+          />
+          <button
+            onClick={() => handleSendMessage(inputValue)}
+            disabled={!inputValue.trim() || isTyping}
+            className="p-3 sm:p-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+          >
+            <Send className="w-5 h-5 text-white" />
+          </button>
+        </div>
+        
+        {/* Aviso ético */}
+        <div className="mt-3 flex items-start gap-2 px-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
+          <p className="text-xs leading-relaxed text-gray-500">
+            Este é um suporte emocional. Em caso de emergência ou sintomas graves, procure atendimento médico imediatamente.
           </p>
         </div>
       </div>
