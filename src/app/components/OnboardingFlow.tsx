@@ -18,7 +18,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   const steps = [
     {
-      title: 'Bem-vindo(a) 💛',
+      title: 'Bem-vindo(a)',
       subtitle: 'Vamos aos poucos…',
       content: (
         <div className="space-y-6">
@@ -28,6 +28,18 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <p className="text-[#5C6F82] text-sm leading-relaxed">
             Não somos terapia, mas estamos aqui pra te apoiar sempre que precisar.
           </p>
+          
+          {/* Logo ampliada na tela de boas-vindas */}
+          <div className="flex items-center justify-center py-8">
+            <img 
+              src="https://k6hrqrxuu8obbfwn.public.blob.vercel-storage.com/temp/46450cd0-be72-47f6-bc9f-5cc92c1cc158.png" 
+              alt="Calma em Movimento" 
+              className="w-64 h-64 object-contain transition-transform duration-300 hover:scale-105"
+              style={{
+                filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.12))'
+              }}
+            />
+          </div>
         </div>
       )
     },
@@ -149,7 +161,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       )
     },
     {
-      title: 'Tudo pronto! 🌱',
+      title: 'Tudo Pronto',
       subtitle: 'Respira, vai dar certo no seu tempo',
       content: (
         <div className="space-y-6">
@@ -191,7 +203,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="flex-1 flex flex-col justify-between p-6 max-w-md mx-auto w-full">
         <div className="space-y-6 mt-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold" style={{ color: '#5C6F82' }}>
+            <h1 className="text-4xl font-bold" style={{ color: '#5C6F82' }}>
               {currentStep.title}
             </h1>
             <p className="text-sm" style={{ color: '#95A8B8' }}>

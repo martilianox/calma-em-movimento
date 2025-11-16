@@ -40,7 +40,7 @@ export function AnimatedLogo({ onComplete }: AnimatedLogoProps) {
           }}
         >
           <img 
-            src="https://k6hrqrxuu8obbfwn.public.blob.vercel-storage.com/temp/04a7671d-26d0-4fad-a540-da6bfed424e4.png" 
+            src="https://k6hrqrxuu8obbfwn.public.blob.vercel-storage.com/temp/46450cd0-be72-47f6-bc9f-5cc92c1cc158.png" 
             alt="Calma em Movimento" 
             className="w-48 h-48 object-contain drop-shadow-2xl"
             style={{

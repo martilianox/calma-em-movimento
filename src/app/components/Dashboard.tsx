@@ -1,6 +1,6 @@
 'use client'
 
-import { Heart, Wind, BookOpen, Calendar, Home as HomeIcon, Sparkles } from 'lucide-react'
+import { Heart, Wind, BookOpen, Calendar, Home as HomeIcon, Sparkles, GraduationCap, Lightbulb, Brain } from 'lucide-react'
 import type { Screen } from '../page'
 import { useEffect, useState } from 'react'
 
@@ -23,16 +23,30 @@ export function Dashboard({ navigate }: DashboardProps) {
   const currentHour = new Date().getHours()
   
   let greeting = ''
-  let greetingIcon = '☀️'
   if (currentHour < 12) {
     greeting = `Bom dia, ${userName}`
-    greetingIcon = '☀️'
   } else if (currentHour < 18) {
     greeting = `Oi, ${userName}`
-    greetingIcon = '🌤️'
   } else {
     greeting = `Boa noite, ${userName}`
-    greetingIcon = '🌙'
+  }
+
+  // Funções para abrir conteúdos externos
+  const openAnxietyPDFs = () => {
+    window.open('https://www.google.com/search?q=ansiedade+depressão+filetype:pdf', '_blank')
+  }
+
+  const openPracticalTipsVideos = () => {
+    window.open('https://www.youtube.com/results?search_query=dicas+práticas+ansiedade+depressão', '_blank')
+  }
+
+  const openAllContents = () => {
+    // Abre PDFs
+    window.open('https://www.google.com/search?q=ansiedade+depressão+filetype:pdf', '_blank')
+    // Abre vídeos após um pequeno delay para não bloquear popups
+    setTimeout(() => {
+      window.open('https://www.youtube.com/results?search_query=dicas+práticas+ansiedade+depressão', '_blank')
+    }, 500)
   }
 
   const renderHomeTab = () => (
@@ -40,20 +54,17 @@ export function Dashboard({ navigate }: DashboardProps) {
       {/* Header com logo e saudação alinhados */}
       <div className="flex items-center gap-4 pt-4 pb-2">
         <img 
-          src="https://k6hrqrxuu8obbfwn.public.blob.vercel-storage.com/temp/04a7671d-26d0-4fad-a540-da6bfed424e4.png" 
+          src="https://k6hrqrxuu8obbfwn.public.blob.vercel-storage.com/temp/46450cd0-be72-47f6-bc9f-5cc92c1cc158.png" 
           alt="Calma em Movimento" 
-          className="w-16 h-16 object-contain flex-shrink-0 transition-transform duration-300 hover:scale-105"
+          className="w-48 h-48 object-contain flex-shrink-0 transition-transform duration-300 hover:scale-105"
           style={{
             filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))'
           }}
         />
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl">{greetingIcon}</span>
-            <h1 className="text-xl font-semibold" style={{ color: '#5C6F82' }}>
-              {greeting}
-            </h1>
-          </div>
+          <h1 className="text-3xl font-semibold mb-1" style={{ color: '#5C6F82' }}>
+            {greeting}
+          </h1>
           <p className="text-sm" style={{ color: '#95A8B8' }}>
             Como você está se sentindo?
           </p>
@@ -140,6 +151,81 @@ export function Dashboard({ navigate }: DashboardProps) {
               </h3>
               <p className="text-sm leading-relaxed" style={{ color: '#5C6F82', opacity: 0.8 }}>
                 Acompanhe sua jornada
+              </p>
+            </div>
+            <BookOpen className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity duration-300" style={{ color: '#5C6F82' }} />
+          </div>
+        </button>
+      </div>
+
+      {/* Seção de Conteúdos Educativos */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 px-1">
+          <GraduationCap className="w-5 h-5" style={{ color: '#5C6F82' }} />
+          <h2 className="text-base font-semibold" style={{ color: '#5C6F82' }}>
+            Conteúdos Educativos
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={openAnxietyPDFs}
+            className="p-4 rounded-2xl text-left transition-all duration-300 hover:scale-[1.03] hover:shadow-lg active:scale-[0.97] group"
+            style={{ 
+              backgroundColor: '#E8D4F8',
+              boxShadow: '0 2px 12px rgba(232, 212, 248, 0.15)'
+            }}
+          >
+            <div className="space-y-2">
+              <Brain className="w-6 h-6 opacity-70 group-hover:opacity-100 transition-opacity duration-300" style={{ color: '#5C6F82' }} />
+              <div>
+                <h3 className="font-semibold text-sm mb-0.5" style={{ color: '#5C6F82' }}>
+                  Entenda a ansiedade
+                </h3>
+                <p className="text-xs leading-relaxed" style={{ color: '#5C6F82', opacity: 0.75 }}>
+                  Aprenda sobre o tema
+                </p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={openPracticalTipsVideos}
+            className="p-4 rounded-2xl text-left transition-all duration-300 hover:scale-[1.03] hover:shadow-lg active:scale-[0.97] group"
+            style={{ 
+              backgroundColor: '#FFE8CC',
+              boxShadow: '0 2px 12px rgba(255, 232, 204, 0.15)'
+            }}
+          >
+            <div className="space-y-2">
+              <Lightbulb className="w-6 h-6 opacity-70 group-hover:opacity-100 transition-opacity duration-300" style={{ color: '#5C6F82' }} />
+              <div>
+                <h3 className="font-semibold text-sm mb-0.5" style={{ color: '#5C6F82' }}>
+                  Dicas práticas
+                </h3>
+                <p className="text-xs leading-relaxed" style={{ color: '#5C6F82', opacity: 0.75 }}>
+                  Técnicas do dia a dia
+                </p>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <button
+          onClick={openAllContents}
+          className="w-full p-4 rounded-2xl text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] group"
+          style={{ 
+            backgroundColor: '#D4E8F7',
+            boxShadow: '0 2px 12px rgba(212, 232, 247, 0.15)'
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h3 className="font-semibold text-sm mb-0.5 group-hover:translate-x-1 transition-transform duration-300" style={{ color: '#5C6F82' }}>
+                Ver todos os conteúdos
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: '#5C6F82', opacity: 0.75 }}>
+                Explore a biblioteca completa
               </p>
             </div>
             <BookOpen className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity duration-300" style={{ color: '#5C6F82' }} />
