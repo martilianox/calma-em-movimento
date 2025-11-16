@@ -20,8 +20,10 @@ import EmotionalCalendar from './components/EmotionalCalendar'
 import DailyDiary from './components/DailyDiary'
 import AnxietyGraph from './components/AnxietyGraph'
 import MedicalSummary from './components/MedicalSummary'
+import { LandingPage } from './components/LandingPage'
 
 export type Screen = 
+  | 'landing'
   | 'logo'
   | 'auth'
   | 'initial-registration'
@@ -54,7 +56,7 @@ interface DiaryEntry {
 }
 
 export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('logo')
+  const [currentScreen, setCurrentScreen] = useState<Screen>('landing')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [hasProfile, setHasProfile] = useState(false)
   const [onboardingComplete, setOnboardingComplete] = useState(false)
@@ -82,6 +84,14 @@ export default function Home() {
 
   const checkAuth = async () => {
     try {
+      const hasSeenLanding = sessionStorage.getItem('hasSeenLanding')
+      
+      if (!hasSeenLanding) {
+        setCurrentScreen('landing')
+        setLoading(false)
+        return
+      }
+
       const hasSeenLogo = sessionStorage.getItem('hasSeenLogo')
       
       if (hasSeenLogo) {
@@ -141,6 +151,11 @@ export default function Home() {
 
   const navigate = (screen: Screen) => {
     setCurrentScreen(screen)
+  }
+
+  const handleLandingComplete = () => {
+    sessionStorage.setItem('hasSeenLanding', 'true')
+    setCurrentScreen('logo')
   }
 
   const handleLogoComplete = () => {
@@ -228,6 +243,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F7F9FA' }}>
+      {currentScreen === 'landing' && (
+        <LandingPage onGetStarted={handleLandingComplete} />
+      )}
+
       {currentScreen === 'logo' && showLogo && (
         <AnimatedLogo onComplete={handleLogoComplete} />
       )}

@@ -18,7 +18,8 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
   const exercises = {
     'breathing-calm': {
       title: 'Respiração para acalmar',
-      color: '#C7DDF2',
+      gradient: 'from-blue-200 via-purple-200 to-pink-200',
+      textColor: '#5C6F82',
       steps: [
         { text: 'Encontre uma posição confortável', duration: 5 },
         { text: 'Coloque uma mão no peito e outra na barriga', duration: 5 },
@@ -38,7 +39,8 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
     },
     'sleep-preparation': {
       title: 'Preparar pro sono',
-      color: '#5C6F82',
+      gradient: 'from-purple-300 via-indigo-300 to-blue-300',
+      textColor: '#FFFFFF',
       textLight: true,
       steps: [
         { text: 'Deita confortável, fecha os olhos', duration: 5 },
@@ -57,7 +59,8 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
     },
     'racing-thoughts': {
       title: 'Pensamento acelerado',
-      color: '#A8D5C2',
+      gradient: 'from-pink-200 via-purple-200 to-blue-200',
+      textColor: '#5C6F82',
       steps: [
         { text: 'Respira fundo. Eu tô aqui com você', duration: 5 },
         { text: 'Vamos organizar esses pensamentos juntos', duration: 5 },
@@ -74,7 +77,8 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
     },
     'self-compassion': {
       title: 'Autocompaixão',
-      color: '#E7CBCB',
+      gradient: 'from-rose-200 via-pink-200 to-purple-200',
+      textColor: '#5C6F82',
       steps: [
         { text: 'Coloca a mão no coração', duration: 5 },
         { text: 'Sente o calor da sua mão', duration: 5 },
@@ -91,7 +95,8 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
     },
     'quick-crisis': {
       title: 'Crise rápida',
-      color: '#F3EDE7',
+      gradient: 'from-blue-100 via-purple-100 to-pink-100',
+      textColor: '#5C6F82',
       steps: [
         { text: 'Eu tô com você. Respira comigo', duration: 4 },
         { text: 'Inspira pelo nariz', duration: 4 },
@@ -196,14 +201,13 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
 
   return (
     <div 
-      className="min-h-screen flex flex-col"
-      style={{ backgroundColor: exercise.color }}
+      className={`min-h-screen flex flex-col bg-gradient-to-br ${exercise.gradient}`}
     >
       {/* Header */}
       <div className="p-6 flex items-center justify-between">
         <button
           onClick={() => navigate('exercises')}
-          className="p-2 rounded-full transition-colors"
+          className="p-2 rounded-full transition-colors backdrop-blur-sm"
           style={{ backgroundColor: exercise.textLight ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.8)' }}
         >
           <ArrowLeft 
@@ -213,7 +217,7 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
         </button>
         <button
           onClick={handleRestart}
-          className="p-2 rounded-full transition-colors"
+          className="p-2 rounded-full transition-colors backdrop-blur-sm"
           style={{ backgroundColor: exercise.textLight ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.8)' }}
         >
           <RotateCcw 
@@ -232,7 +236,7 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
               cx="96"
               cy="96"
               r="88"
-              stroke={exercise.textLight ? 'rgba(255, 255, 255, 0.2)' : 'rgba(92, 111, 130, 0.2)'}
+              stroke={exercise.textLight ? 'rgba(255, 255, 255, 0.3)' : 'rgba(92, 111, 130, 0.2)'}
               strokeWidth="8"
               fill="none"
             />
@@ -240,7 +244,7 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
               cx="96"
               cy="96"
               r="88"
-              stroke={exercise.textLight ? '#FFFFFF' : '#5C6F82'}
+              stroke={exercise.textLight ? '#FFFFFF' : exercise.textColor}
               strokeWidth="8"
               fill="none"
               strokeDasharray={`${2 * Math.PI * 88}`}
@@ -252,7 +256,7 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
           <div className="absolute inset-0 flex items-center justify-center">
             <span 
               className="text-5xl font-semibold"
-              style={{ color: exercise.textLight ? '#FFFFFF' : '#5C6F82' }}
+              style={{ color: exercise.textLight ? '#FFFFFF' : exercise.textColor }}
             >
               {isPlaying ? timeLeft : '•'}
             </span>
@@ -263,7 +267,7 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
         <div className="text-center space-y-2 max-w-sm">
           <p 
             className="text-xl font-medium leading-relaxed"
-            style={{ color: exercise.textLight ? '#FFFFFF' : '#5C6F82' }}
+            style={{ color: exercise.textLight ? '#FFFFFF' : exercise.textColor }}
           >
             {isComplete 
               ? 'Você conseguiu 💛' 
@@ -287,7 +291,7 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
         {/* Botão principal: Play/Pause */}
         <button
           onClick={handlePlayPause}
-          className="w-full py-4 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center gap-2"
+          className="w-full py-4 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-sm shadow-lg"
           style={{ 
             backgroundColor: exercise.textLight ? 'rgba(255, 255, 255, 0.9)' : '#FFFFFF',
             color: '#5C6F82'
@@ -310,7 +314,7 @@ export function ExerciseGuided({ navigate, exerciseId }: ExerciseGuidedProps) {
         {!isComplete && (
           <button
             onClick={handleSkipNext}
-            className="w-full py-3 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-2xl font-medium transition-all duration-300 flex items-center justify-center gap-2 backdrop-blur-sm"
             style={{ 
               backgroundColor: exercise.textLight ? 'rgba(255, 255, 255, 0.15)' : 'rgba(92, 111, 130, 0.1)',
               color: exercise.textLight ? 'rgba(255, 255, 255, 0.9)' : '#5C6F82'

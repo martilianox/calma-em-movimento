@@ -48,7 +48,7 @@ export function CrisisMode({ navigate }: CrisisModeProps) {
 
   if (step === 'welcome') {
     return (
-      <div className="min-h-screen flex flex-col justify-between p-6" style={{ backgroundColor: '#D8E9F1' }}>
+      <div className="min-h-screen flex flex-col justify-between p-6 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
         <div className="flex-1 flex flex-col justify-center space-y-6 max-w-md mx-auto">
           <div className="text-center space-y-4">
             <Heart className="w-12 h-12 mx-auto" style={{ color: '#5C6F82' }} />
@@ -61,8 +61,8 @@ export function CrisisMode({ navigate }: CrisisModeProps) {
           </div>
 
           <div 
-            className="p-5 rounded-2xl space-y-3"
-            style={{ backgroundColor: 'rgba(255, 255, 255, 0.6)' }}
+            className="p-5 rounded-2xl space-y-3 backdrop-blur-sm"
+            style={{ backgroundColor: 'rgba(255, 255, 255, 0.7)' }}
           >
             <p className="text-sm leading-relaxed" style={{ color: '#5C6F82' }}>
               Se você está em risco imediato, ligue para:
@@ -79,8 +79,8 @@ export function CrisisMode({ navigate }: CrisisModeProps) {
           {/* Botão de Contatos de Emergência */}
           <button
             onClick={() => navigate('contacts')}
-            className="w-full p-5 rounded-2xl flex items-center gap-4 transition-all duration-300 hover:scale-[1.02]"
-            style={{ backgroundColor: 'rgba(168, 213, 194, 0.3)', border: '2px solid #A8D5C2' }}
+            className="w-full p-5 rounded-2xl flex items-center gap-4 transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm shadow-sm"
+            style={{ backgroundColor: 'rgba(168, 213, 194, 0.4)', border: '2px solid #A8D5C2' }}
           >
             <Users className="w-6 h-6" style={{ color: '#5C6F82' }} />
             <div className="text-left flex-1">
@@ -97,7 +97,7 @@ export function CrisisMode({ navigate }: CrisisModeProps) {
         <div className="space-y-3">
           <button
             onClick={() => setStep('breathing')}
-            className="w-full py-4 rounded-2xl font-medium transition-all duration-300 hover:scale-[1.02]"
+            className="w-full py-4 rounded-2xl font-medium transition-all duration-300 hover:scale-[1.02] shadow-lg"
             style={{ backgroundColor: '#83978A', color: '#FFFFFF' }}
           >
             Começar respiração
@@ -122,17 +122,18 @@ export function CrisisMode({ navigate }: CrisisModeProps) {
     }
 
     return (
-      <div className="min-h-screen flex flex-col justify-between p-6" style={{ backgroundColor: '#D8E9F1' }}>
+      <div className="min-h-screen flex flex-col justify-between p-6 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
         <div className="flex-1 flex flex-col justify-center items-center space-y-8">
           {/* Breathing circle */}
           <div className="relative">
             <div
-              className="rounded-full transition-all duration-1000 ease-in-out"
+              className="rounded-full transition-all duration-1000 ease-in-out backdrop-blur-sm"
               style={{
                 width: phase === 'inhale' ? '200px' : phase === 'hold' ? '200px' : '150px',
                 height: phase === 'inhale' ? '200px' : phase === 'hold' ? '200px' : '150px',
-                backgroundColor: 'rgba(168, 213, 194, 0.3)',
-                border: '3px solid #A8D5C2'
+                backgroundColor: 'rgba(168, 213, 194, 0.4)',
+                border: '3px solid #A8D5C2',
+                boxShadow: '0 8px 32px rgba(168, 213, 194, 0.3)'
               }}
             />
             <div className="absolute inset-0 flex items-center justify-center">
@@ -154,7 +155,7 @@ export function CrisisMode({ navigate }: CrisisModeProps) {
 
           {/* Progress bar */}
           <div className="w-full max-w-xs">
-            <div className="w-full h-2 rounded-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)' }}>
+            <div className="w-full h-2 rounded-full backdrop-blur-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.6)' }}>
               <div
                 className="h-full rounded-full transition-all duration-300"
                 style={{ backgroundColor: '#A8D5C2', width: `${progress}%` }}
@@ -178,11 +179,11 @@ export function CrisisMode({ navigate }: CrisisModeProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-6" style={{ backgroundColor: '#D8E9F1' }}>
+    <div className="min-h-screen flex flex-col justify-between p-6 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
       <div className="flex-1 flex flex-col justify-center space-y-6 max-w-md mx-auto">
         <div className="text-center space-y-4">
           <div 
-            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-lg"
             style={{ backgroundColor: '#A8D5C2' }}
           >
             <Heart className="w-8 h-8" style={{ color: '#5C6F82' }} />
@@ -196,8 +197,8 @@ export function CrisisMode({ navigate }: CrisisModeProps) {
         </div>
 
         <div 
-          className="p-5 rounded-2xl"
-          style={{ backgroundColor: 'rgba(255, 255, 255, 0.6)' }}
+          className="p-5 rounded-2xl backdrop-blur-sm"
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.7)' }}
         >
           <p className="text-sm leading-relaxed" style={{ color: '#5C6F82' }}>
             Se quiser, me conta o que estava acontecendo. Tudo que você colocar aqui é só seu, e está seguro.
@@ -207,8 +208,8 @@ export function CrisisMode({ navigate }: CrisisModeProps) {
 
       <div className="space-y-3">
         <button
-          onClick={() => navigate('dialogue')}
-          className="w-full py-4 rounded-2xl font-medium transition-all duration-300 hover:scale-[1.02]"
+          onClick={() => navigate('register')}
+          className="w-full py-4 rounded-2xl font-medium transition-all duration-300 hover:scale-[1.02] shadow-lg"
           style={{ backgroundColor: '#83978A', color: '#FFFFFF' }}
         >
           Registrar momento
