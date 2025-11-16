@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { ArrowLeft, Send, Heart, Phone, AlertCircle, Activity, Brain, Dumbbell } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 import type { Screen } from '../page'
 
 interface MedicoAmigoProps {
@@ -73,12 +74,88 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
   const [isTyping, setIsTyping] = useState(false)
   const [conversationContext, setConversationContext] = useState<string[]>([])
   const [userSymptoms, setUserSymptoms] = useState<string[]>([])
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Carregar conversa existente ou criar nova
+  useEffect(() => {
+    loadOrCreateConversation()
+  }, [])
+
+  const loadOrCreateConversation = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      // Buscar conversa mais recente
+      const { data: conversations } = await supabase
+        .from('medico_amigo_conversations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (conversations && conversations.length > 0) {
+        const conv = conversations[0]
+        setConversationId(conv.id)
+        
+        // Carregar mensagens salvas
+        if (conv.messages && Array.isArray(conv.messages) && conv.messages.length > 1) {
+          const loadedMessages = conv.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }))
+          setMessages(loadedMessages)
+        }
+
+        if (conv.symptoms) {
+          setUserSymptoms(conv.symptoms)
+        }
+      } else {
+        // Criar nova conversa
+        const { data: newConv } = await supabase
+          .from('medico_amigo_conversations')
+          .insert({
+            user_id: user.id,
+            messages: messages,
+            symptoms: [],
+            severity: 'low'
+          })
+          .select()
+          .single()
+
+        if (newConv) {
+          setConversationId(newConv.id)
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar conversa:', error)
+    }
+  }
+
+  const saveConversation = async (newMessages: Message[], symptoms: string[], severity: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || !conversationId) return
+
+      await supabase
+        .from('medico_amigo_conversations')
+        .update({
+          messages: newMessages,
+          symptoms: symptoms,
+          severity: severity,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', conversationId)
+    } catch (error) {
+      console.error('Erro ao salvar conversa:', error)
+    }
+  }
 
   // Análise inteligente de sintomas
   const analyzeSymptoms = (text: string, context: string[]): SymptomAnalysis => {
@@ -255,7 +332,8 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
       timestamp: new Date()
     }
     
-    setMessages(prev => [...prev, userMessage])
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages)
     setInputValue('')
 
     // Atualiza contexto da conversa
@@ -264,12 +342,13 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
 
     // Analisa sintomas
     const analysis = analyzeSymptoms(text, conversationContext)
-    setUserSymptoms(prev => [...new Set([...prev, ...analysis.symptoms])])
+    const updatedSymptoms = [...new Set([...userSymptoms, ...analysis.symptoms])]
+    setUserSymptoms(updatedSymptoms)
 
     // Simula digitação da IA
     setIsTyping(true)
     
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsTyping(false)
       
       const response = generateIntelligentResponse(text, analysis, messages.length)
@@ -283,7 +362,11 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
         severity: analysis.severity
       }
       
-      setMessages(prev => [...prev, aiMessage])
+      const finalMessages = [...updatedMessages, aiMessage]
+      setMessages(finalMessages)
+
+      // Salvar no Supabase
+      await saveConversation(finalMessages, updatedSymptoms, analysis.severity)
     }, 1800)
   }
 
