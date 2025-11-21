@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { ArrowLeft, Send, Heart, Phone, AlertCircle, Activity, Brain, Dumbbell, Sparkles } from 'lucide-react'
+import { ArrowLeft, Send, Heart, Phone, AlertCircle, Activity, Brain, Dumbbell } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { consultDoctorAI, translateToEnglish, translateToPortuguese, enhanceResponse } from '@/lib/doctorAI'
 import type { Screen } from '../page'
 
 interface MedicoAmigoProps {
@@ -18,7 +17,6 @@ interface Message {
   showActions?: boolean
   isTyping?: boolean
   severity?: 'low' | 'medium' | 'high' | 'emergency'
-  isAIEnhanced?: boolean
 }
 
 interface SymptomAnalysis {
@@ -67,7 +65,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
     {
       id: '1',
       type: 'ai',
-      content: 'Oi, eu sou o Médico Amigo. 💙\n\nEstou aqui para te ouvir e te ajudar com suporte especializado em saúde mental.\n\nMe conta: como você está se sentindo agora?',
+      content: 'Oi, eu sou o Médico Amigo. 💙\n\nEstou aqui para te ouvir e te ajudar.\n\nMe conta: como você está se sentindo agora?',
       timestamp: new Date(),
       showActions: false
     }
@@ -77,7 +75,6 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
   const [conversationContext, setConversationContext] = useState<string[]>([])
   const [userSymptoms, setUserSymptoms] = useState<string[]>([])
   const [conversationId, setConversationId] = useState<string | null>(null)
-  const [useAIAPI, setUseAIAPI] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -92,8 +89,6 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
 
   const loadOrCreateConversation = async () => {
     try {
-      if (!supabase) return
-
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
@@ -145,8 +140,6 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
 
   const saveConversation = async (newMessages: Message[], symptoms: string[], severity: string) => {
     try {
-      if (!supabase) return
-
       const { data: { user } } = await supabase.auth.getUser()
       if (!user || !conversationId) return
 
@@ -243,68 +236,24 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
     return { severity, symptoms, recommendation, confidence }
   }
 
-  // Gera resposta usando API Doutor IA ou fallback local
-  const generateAIResponse = async (
+  // Gera resposta inteligente baseada na análise
+  const generateIntelligentResponse = (
     userMessage: string, 
     analysis: SymptomAnalysis,
     messageCount: number
-  ): Promise<{ content: string; showActions: boolean; isAIEnhanced: boolean }> => {
-    const { severity, recommendation } = analysis
+  ): { content: string; showActions: boolean } => {
+    const { severity, recommendation, symptoms } = analysis
 
-    // Para emergências, usa resposta local imediata
+    // EMERGÊNCIA - Resposta imediata
     if (severity === 'emergency') {
       return {
         content: '🚨 ATENÇÃO: Os sintomas que você descreveu precisam de avaliação médica URGENTE.\n\n' +
                  'Por favor, procure atendimento de emergência IMEDIATAMENTE ou ligue para 192 (SAMU).\n\n' +
                  'Não espere. Sua segurança é prioridade.\n\n' +
                  'Posso abrir seus contatos de emergência?',
-        showActions: true,
-        isAIEnhanced: false
+        showActions: true
       }
     }
-
-    // Tenta usar API Doutor IA para respostas especializadas
-    if (useAIAPI) {
-      try {
-        // Traduz mensagem para inglês (API funciona melhor em inglês)
-        const translatedMessage = translateToEnglish(userMessage)
-        
-        // Consulta API com especialização em psiquiatria
-        const apiResponse = await consultDoctorAI(translatedMessage, 'psychiatry', 'en')
-        
-        if (apiResponse.response && !apiResponse.error) {
-          // Traduz resposta de volta para português
-          const translatedResponse = translateToPortuguese(apiResponse.response)
-          
-          // Melhora resposta com contexto local
-          const enhancedContent = enhanceResponse(translatedResponse, userMessage, severity)
-          
-          return {
-            content: enhancedContent,
-            showActions: severity !== 'low',
-            isAIEnhanced: true
-          }
-        } else {
-          console.warn('API Doutor IA não disponível, usando fallback local')
-          setUseAIAPI(false) // Desativa API se falhar
-        }
-      } catch (error) {
-        console.error('Erro ao consultar API Doutor IA:', error)
-        setUseAIAPI(false) // Desativa API se falhar
-      }
-    }
-
-    // Fallback: usa lógica local inteligente
-    return generateLocalResponse(userMessage, analysis, messageCount)
-  }
-
-  // Resposta local inteligente (fallback)
-  const generateLocalResponse = (
-    userMessage: string, 
-    analysis: SymptomAnalysis,
-    messageCount: number
-  ): { content: string; showActions: boolean; isAIEnhanced: boolean } => {
-    const { severity, recommendation } = analysis
 
     // ALTA SEVERIDADE - Recomenda atendimento médico
     if (severity === 'high') {
@@ -313,8 +262,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
                  'Pelos sintomas que você descreveu, eu recomendo fortemente que você procure atendimento médico hoje mesmo.\n\n' +
                  'Enquanto isso, posso te ajudar com técnicas de respiração para aliviar um pouco o desconforto.\n\n' +
                  'O que você prefere fazer agora?',
-        showActions: true,
-        isAIEnhanced: false
+        showActions: true
       }
     }
 
@@ -326,8 +274,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
                    'Esses sintomas são comuns em momentos de ansiedade, mas podemos trabalhar juntos para aliviar.\n\n' +
                    'Vou te ensinar uma técnica de respiração que pode ajudar muito agora.\n\n' +
                    'Quer tentar comigo?',
-          showActions: true,
-          isAIEnhanced: false
+          showActions: true
         }
       }
     }
@@ -342,8 +289,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
                  '• Meditação rápida\n' +
                  '• Alongamento suave\n\n' +
                  'Vou te levar para os exercícios agora, tudo bem?',
-        showActions: true,
-        isAIEnhanced: false
+        showActions: true
       }
     }
 
@@ -353,8 +299,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
         content: 'Obrigado por compartilhar isso comigo. 💙\n\n' +
                  'Você está em um espaço seguro aqui.\n\n' +
                  'Para eu te ajudar melhor: você já sentiu isso antes ou é a primeira vez?',
-        showActions: false,
-        isAIEnhanced: false
+        showActions: false
       }
     }
 
@@ -363,8 +308,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
         content: 'Entendo. Cada sensação que você tem é válida e importante.\n\n' +
                  'Vamos trabalhar juntos para você se sentir melhor.\n\n' +
                  'Além do que você já me contou, há algo específico que você acha que pode ter causado isso?',
-        showActions: false,
-        isAIEnhanced: false
+        showActions: false
       }
     }
 
@@ -373,8 +317,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
       content: 'Estou aqui com você, ouvindo tudo com atenção. 💙\n\n' +
                'Suas sensações são reais e importantes.\n\n' +
                'Continue me contando, no seu tempo. Não há pressa.',
-      showActions: false,
-      isAIEnhanced: false
+      showActions: false
     }
   }
 
@@ -405,11 +348,10 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
     // Simula digitação da IA
     setIsTyping(true)
     
-    // Gera resposta usando API ou fallback
-    const response = await generateAIResponse(text, analysis, messages.length)
-    
     setTimeout(async () => {
       setIsTyping(false)
+      
+      const response = generateIntelligentResponse(text, analysis, messages.length)
       
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -417,8 +359,7 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
         content: response.content,
         timestamp: new Date(),
         showActions: response.showActions,
-        severity: analysis.severity,
-        isAIEnhanced: response.isAIEnhanced
+        severity: analysis.severity
       }
       
       const finalMessages = [...updatedMessages, aiMessage]
@@ -504,13 +445,10 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
               <Heart className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-white flex items-center gap-2">
-                Médico Amigo
-                {useAIAPI && <Sparkles className="w-4 h-4 text-yellow-300" />}
-              </h1>
+              <h1 className="text-xl font-semibold text-white">Médico Amigo</h1>
               <p className="text-sm text-white/90 flex items-center gap-1">
                 <Activity className="w-3 h-3" />
-                {useAIAPI ? 'IA Especializada em Psicologia' : 'Aqui para te ouvir'}
+                Aqui para te ouvir
               </p>
             </div>
           </div>
@@ -531,13 +469,6 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
                   : 'bg-white text-gray-800 rounded-bl-sm'
               }`}
             >
-              {message.isAIEnhanced && (
-                <div className="flex items-center gap-1 mb-2 text-xs text-purple-600 font-medium">
-                  <Sparkles className="w-3 h-3" />
-                  Resposta especializada por IA médica
-                </div>
-              )}
-              
               <p className="text-base leading-relaxed whitespace-pre-line">
                 {message.content}
               </p>
@@ -673,7 +604,6 @@ export function MedicoAmigo({ navigate }: MedicoAmigoProps) {
         <div className="mt-3 flex items-start gap-2 px-2">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-400" />
           <p className="text-xs leading-relaxed text-gray-500">
-            {useAIAPI && <span className="font-medium text-purple-600">Powered by AI Doctor API. </span>}
             Este é um suporte emocional. Em caso de emergência ou sintomas graves, procure atendimento médico imediatamente.
           </p>
         </div>

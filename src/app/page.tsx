@@ -66,39 +66,24 @@ export default function Home() {
   const [showLogo, setShowLogo] = useState(true)
   const [loading, setLoading] = useState(true)
   const [skipRegistration, setSkipRegistration] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  // Garantir que o componente só execute no cliente
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   // Verificar autenticação e perfil do usuário
   useEffect(() => {
-    if (!mounted) return
-    
     checkAuth()
 
-    // Listener para mudanças de autenticação (apenas se Supabase estiver configurado)
-    if (supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        setIsAuthenticated(!!session)
-        if (session) {
-          checkUserProfile()
-        }
-      })
+    // Listener para mudanças de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session)
+      if (session) {
+        checkUserProfile()
+      }
+    })
 
-      return () => subscription.unsubscribe()
-    }
-  }, [mounted])
+    return () => subscription.unsubscribe()
+  }, [])
 
   const checkAuth = async () => {
     try {
-      if (typeof window === 'undefined') {
-        setLoading(false)
-        return
-      }
-
       const hasSeenLanding = sessionStorage.getItem('hasSeenLanding')
       
       if (!hasSeenLanding) {
@@ -111,14 +96,6 @@ export default function Home() {
       
       if (hasSeenLogo) {
         setShowLogo(false)
-      }
-
-      // Verificar se Supabase está configurado
-      if (!supabase) {
-        console.warn('Supabase não configurado - usando modo offline')
-        setCurrentScreen(hasSeenLogo ? 'auth' : 'logo')
-        setLoading(false)
-        return
       }
 
       const { data: { session } } = await supabase.auth.getSession()
@@ -139,12 +116,6 @@ export default function Home() {
 
   const checkUserProfile = async () => {
     try {
-      if (!supabase) {
-        setHasProfile(false)
-        setCurrentScreen('initial-registration')
-        return
-      }
-
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) return
@@ -183,16 +154,12 @@ export default function Home() {
   }
 
   const handleLandingComplete = () => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('hasSeenLanding', 'true')
-    }
+    sessionStorage.setItem('hasSeenLanding', 'true')
     setCurrentScreen('logo')
   }
 
   const handleLogoComplete = () => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('hasSeenLogo', 'true')
-    }
+    sessionStorage.setItem('hasSeenLogo', 'true')
     setShowLogo(false)
     setCurrentScreen('auth')
   }
@@ -229,29 +196,27 @@ export default function Home() {
 
   const handleSaveDiary = async (entry: DiaryEntry) => {
     try {
-      if (supabase) {
-        const { data: { user } } = await supabase.auth.getUser()
-        
-        if (user) {
-          // Tentar salvar no Supabase (se tabela existir)
-          try {
-            await supabase
-              .from('diary_entries')
-              .upsert({
-                user_id: user.id,
-                date: entry.date,
-                anxiety_level: entry.anxietyLevel,
-                feelings: entry.feelings,
-                what_feeling: entry.whatFeeling,
-                what_caused: entry.whatCaused,
-                body_reaction: entry.bodyReaction,
-                free_thoughts: entry.freeThoughts
-              })
-          } catch (dbError) {
-            console.log('Erro ao salvar no banco (tabela pode não existir):', dbError)
-            // Continua mesmo se falhar - salva localmente
-          }
-        }
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) return
+
+      // Tentar salvar no Supabase (se tabela existir)
+      try {
+        await supabase
+          .from('diary_entries')
+          .upsert({
+            user_id: user.id,
+            date: entry.date,
+            anxiety_level: entry.anxietyLevel,
+            feelings: entry.feelings,
+            what_feeling: entry.whatFeeling,
+            what_caused: entry.whatCaused,
+            body_reaction: entry.bodyReaction,
+            free_thoughts: entry.freeThoughts
+          })
+      } catch (dbError) {
+        console.log('Erro ao salvar no banco (tabela pode não existir):', dbError)
+        // Continua mesmo se falhar - salva localmente
       }
 
       // Atualizar estado local
@@ -262,19 +227,6 @@ export default function Home() {
       // Mesmo com erro, volta para o calendário
       setCurrentScreen('calendar')
     }
-  }
-
-  // Renderização inicial vazia para SSR
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F7F9FA' }}>
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" 
-               style={{ borderColor: '#A8D5C2', borderTopColor: 'transparent' }} />
-          <p style={{ color: '#5C6F82' }}>Carregando...</p>
-        </div>
-      </div>
-    )
   }
 
   if (loading) {

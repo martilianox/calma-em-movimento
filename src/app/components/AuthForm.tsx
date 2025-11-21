@@ -23,13 +23,6 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     setLoading(true)
 
     try {
-      // Verificar se Supabase está configurado
-      if (!supabase) {
-        setError('Supabase não está configurado. Por favor, configure as variáveis de ambiente.')
-        setLoading(false)
-        return
-      }
-
       if (isLogin) {
         // Login
         const { data, error } = await supabase.auth.signInWithPassword({
