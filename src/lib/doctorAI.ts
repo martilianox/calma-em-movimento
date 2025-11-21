@@ -22,12 +22,21 @@ const API_URL = `https://${RAPIDAPI_HOST}/chat?noqueue=1`
 
 /**
  * Consulta a API Doutor IA para obter resposta especializada
+ * IMPORTANTE: Esta função só funciona no lado do cliente (browser)
  */
 export async function consultDoctorAI(
   message: string,
   specialization: 'psychiatry' | 'psychology' = 'psychiatry',
   language: 'pt' | 'en' = 'pt'
 ): Promise<DoctorAIResponse> {
+  // Verifica se está no browser
+  if (typeof window === 'undefined') {
+    return {
+      response: '',
+      error: 'API só disponível no cliente',
+    }
+  }
+
   try {
     const response = await fetch(API_URL, {
       method: 'POST',

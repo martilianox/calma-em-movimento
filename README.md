@@ -1,243 +1,251 @@
-# 🌟 Calma em Movimento
+# 🌊 Calma em Movimento
 
-**Aplicativo de saúde mental com IA especializada em psicologia**
+**Aplicativo de suporte emocional e gerenciamento de ansiedade com IA integrada**
 
-Um assistente inteligente para ajudar você a gerenciar ansiedade, estresse e bem-estar emocional com suporte de IA médica especializada.
+Um assistente pessoal de saúde mental que combina tecnologia de ponta com empatia humana para ajudar você a gerenciar ansiedade, crises emocionais e bem-estar mental.
 
 ---
 
 ## ✨ Funcionalidades Principais
 
-### 🤖 **Médico Amigo - IA Especializada**
-- **API Doctor AI integrada** com especialização em psiquiatria/psicologia
-- Análise inteligente de sintomas em tempo real
-- Respostas personalizadas baseadas em severidade
-- Sistema de fallback local quando API não disponível
-- Tradução automática PT ↔ EN para melhor precisão
+### 🤖 Médico Amigo com IA
+- **Consultas especializadas** em psiquiatria e psicologia
+- **Análise inteligente de sintomas** com 4 níveis de severidade
+- **Tradução automática** para melhor precisão nas respostas
+- **Modo offline** com respostas empáticas locais
+- **Integração com API Doctor AI** para respostas médicas especializadas
 
-### 🎯 **Recursos do App**
-- 📊 **Calendário Emocional** - Registre seus sentimentos diariamente
-- 📝 **Diário Digital** - Escreva sobre suas emoções
-- 📈 **Gráficos de Ansiedade** - Visualize seu progresso
-- 🧘 **Exercícios Guiados** - Respiração, meditação, relaxamento
-- 🆘 **Modo Crise** - Suporte imediato em momentos difíceis
-- 📞 **Contatos de Emergência** - Acesso rápido a ajuda profissional
-- 🔐 **Autenticação Supabase** - Dados seguros e sincronizados
+### 🆘 Modo Crise
+- Ativação rápida em momentos de emergência
+- Exercícios de respiração guiados
+- Acesso direto a contatos de emergência
+- Técnicas de grounding e ancoragem
+
+### 🧘 Exercícios Terapêuticos
+- Respiração guiada (4-7-8, Box Breathing)
+- Relaxamento muscular progressivo
+- Meditação mindfulness
+- Alongamentos para ansiedade
+- Técnicas de grounding (5-4-3-2-1)
+
+### 📅 Diário Emocional
+- Registro diário de emoções e ansiedade
+- Gráficos de progresso ao longo do tempo
+- Identificação de padrões e gatilhos
+- Resumo médico para compartilhar com profissionais
+
+### 📚 Biblioteca de Conteúdo
+- Artigos sobre saúde mental
+- Vídeos educativos
+- Podcasts de bem-estar
+- Recursos de autoajuda
+
+### 📞 Contatos de Emergência
+- Lista personalizada de contatos
+- Acesso rápido em crises
+- Números de emergência nacionais
 
 ---
 
-## 🚀 Como Começar
+## 🚀 Deploy na Vercel
 
-### 1️⃣ **Instalação**
+### Passo 1: Preparar o Repositório
+
+1. **Faça commit das alterações:**
+```bash
+git add .
+git commit -m "Preparar app para deploy"
+git push origin main
+```
+
+### Passo 2: Deploy na Vercel
+
+1. **Acesse** [vercel.com](https://vercel.com)
+2. **Clique em** "Add New Project"
+3. **Importe** seu repositório do GitHub
+4. **Configure** as variáveis de ambiente (opcional):
+   - `NEXT_PUBLIC_SUPABASE_URL` - URL do seu projeto Supabase
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Chave anônima do Supabase
+   - `NEXT_PUBLIC_RAPIDAPI_KEY` - Chave da API Doctor AI (opcional)
+
+5. **Clique em** "Deploy"
+
+### Passo 3: Configurar Variáveis de Ambiente (Opcional)
+
+**Importante:** O app funciona perfeitamente SEM variáveis de ambiente! Elas são opcionais.
+
+#### Para adicionar Supabase:
+1. Vá em **Settings** → **Environment Variables**
+2. Adicione:
+   - `NEXT_PUBLIC_SUPABASE_URL`: Sua URL do Supabase
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Sua chave anônima
+
+#### Para adicionar API Doctor AI:
+1. Vá em **Settings** → **Environment Variables**
+2. Adicione:
+   - `NEXT_PUBLIC_RAPIDAPI_KEY`: Sua chave da RapidAPI
+
+3. **Redeploy** o projeto após adicionar variáveis
+
+---
+
+## 🛠️ Desenvolvimento Local
+
+### Pré-requisitos
+- Node.js 18+ instalado
+- npm ou yarn
+
+### Instalação
 
 ```bash
 # Clone o repositório
 git clone https://github.com/seu-usuario/calma-em-movimento.git
-
-# Entre na pasta
 cd calma-em-movimento
 
 # Instale as dependências
 npm install
+
+# Execute o servidor de desenvolvimento
+npm run dev
 ```
 
-### 2️⃣ **Configuração de Variáveis de Ambiente**
+Acesse [http://localhost:3000](http://localhost:3000)
+
+### Variáveis de Ambiente (Opcional)
 
 Crie um arquivo `.env.local` na raiz do projeto:
 
 ```env
-# Supabase (Obrigatório para autenticação e dados)
-NEXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
+# Supabase (opcional - para autenticação e banco de dados)
+NEXT_PUBLIC_SUPABASE_URL=sua_url_aqui
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_aqui
 
-# RapidAPI - Doctor AI (Opcional)
-# Se não configurar, o app usa respostas locais inteligentes
-NEXT_PUBLIC_RAPIDAPI_KEY=sua_chave_rapidapi
+# RapidAPI Doctor AI (opcional - para respostas médicas especializadas)
+NEXT_PUBLIC_RAPIDAPI_KEY=sua_chave_rapidapi_aqui
 ```
 
-**📌 Como obter as credenciais:**
-
-- **Supabase**: Crie um projeto em [supabase.com](https://supabase.com)
-- **RapidAPI** (opcional): Inscreva-se em [rapidapi.com](https://rapidapi.com) e assine a [Doctor AI API](https://rapidapi.com/ai-doctor-api-ai-medical-chatbot-healthcare-ai-assistant/api/ai-doctor-api-ai-medical-chatbot-healthcare-ai-assistant)
-
-### 3️⃣ **Executar Localmente**
-
-```bash
-npm run dev
-```
-
-Abra [http://localhost:3000](http://localhost:3000) no navegador.
+**Nota:** O app funciona perfeitamente sem essas variáveis! Elas apenas adicionam funcionalidades extras.
 
 ---
 
-## 🏗️ **Estrutura do Banco de Dados (Supabase)**
+## 🏗️ Estrutura do Projeto
 
-O app cria automaticamente as tabelas necessárias:
-
-### **Tabelas Principais:**
-
-```sql
--- Perfis de usuário
-user_profiles (
-  id uuid PRIMARY KEY,
-  user_id uuid REFERENCES auth.users,
-  name text,
-  age integer,
-  created_at timestamp
-)
-
--- Conversas do Médico Amigo
-medico_amigo_conversations (
-  id uuid PRIMARY KEY,
-  user_id uuid REFERENCES auth.users,
-  messages jsonb,
-  symptoms text[],
-  severity text,
-  created_at timestamp,
-  updated_at timestamp
-)
-
--- Entradas do diário
-diary_entries (
-  id uuid PRIMARY KEY,
-  user_id uuid REFERENCES auth.users,
-  date text,
-  anxiety_level integer,
-  feelings text[],
-  what_feeling text,
-  what_caused text,
-  body_reaction text,
-  free_thoughts text,
-  created_at timestamp
-)
+```
+calma-em-movimento/
+├── src/
+│   ├── app/
+│   │   ├── components/          # Componentes React
+│   │   │   ├── MedicoAmigo.tsx  # Chat com IA médica
+│   │   │   ├── CrisisMode.tsx   # Modo crise
+│   │   │   ├── Dashboard.tsx    # Tela principal
+│   │   │   └── ...
+│   │   ├── page.tsx             # Página principal
+│   │   └── layout.tsx           # Layout global
+│   ├── lib/
+│   │   ├── supabase.ts          # Cliente Supabase
+│   │   └── doctorAI.ts          # Integração API Doctor AI
+│   └── ...
+├── public/                      # Arquivos estáticos
+├── package.json
+└── README.md
 ```
 
 ---
 
-## 🤖 **Como Funciona a IA Médica**
+## 🔧 Tecnologias Utilizadas
 
-### **Fluxo de Resposta Inteligente:**
-
-1. **Usuário envia mensagem** → Sistema analisa sintomas
-2. **Análise de severidade** → Classifica em: baixa, média, alta, emergência
-3. **Consulta API Doctor AI** → Resposta especializada em psiquiatria
-4. **Tradução e contextualização** → Adapta resposta para português
-5. **Fallback local** → Se API falhar, usa lógica inteligente local
-
-### **Níveis de Severidade:**
-
-| Nível | Ação | Exemplo |
-|-------|------|---------|
-| 🟢 **Baixa** | Exercícios de relaxamento | "Estou um pouco nervoso" |
-| 🟡 **Média** | Técnicas de respiração | "Coração acelerado, suando" |
-| 🟠 **Alta** | Recomenda atendimento médico | "Não aguento mais, desespero" |
-| 🔴 **Emergência** | Contatos de emergência imediatos | "Dor no peito forte, sufocando" |
+- **Next.js 15** - Framework React
+- **React 19** - Biblioteca UI
+- **TypeScript** - Tipagem estática
+- **Tailwind CSS v4** - Estilização
+- **Supabase** - Backend e autenticação (opcional)
+- **Doctor AI API** - Respostas médicas especializadas (opcional)
+- **Lucide Icons** - Ícones modernos
 
 ---
 
-## 📦 **Deploy na Vercel**
+## 🎨 Funcionalidades da IA Médica
 
-### **Opção 1: Deploy Automático (Recomendado)**
+### API Doctor AI Integration
+O Médico Amigo utiliza a API Doctor AI para fornecer:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/seu-usuario/calma-em-movimento)
+- ✅ **Respostas especializadas** em psiquiatria e psicologia
+- ✅ **Análise de sintomas** com níveis de severidade
+- ✅ **Recomendações personalizadas** baseadas no contexto
+- ✅ **Tradução automática** PT ↔ EN para maior precisão
+- ✅ **Modo offline** com respostas empáticas locais
 
-### **Opção 2: Deploy Manual**
-
-```bash
-# Instale a CLI da Vercel
-npm i -g vercel
-
-# Faça login
-vercel login
-
-# Deploy
-vercel --prod
-```
-
-### **⚙️ Configurar Variáveis de Ambiente na Vercel:**
-
-1. Acesse seu projeto na Vercel
-2. Vá em **Settings** → **Environment Variables**
-3. Adicione as variáveis:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NEXT_PUBLIC_RAPIDAPI_KEY` (opcional)
+### Níveis de Severidade
+1. **🟢 Baixo** - Suporte emocional e exercícios
+2. **🟡 Médio** - Técnicas de respiração e aconselhamento
+3. **🟠 Alto** - Recomendação de atendimento médico
+4. **🔴 Emergência** - Ativação imediata de contatos de emergência
 
 ---
 
-## 🛠️ **Tecnologias Utilizadas**
+## 📱 Responsividade
 
-- **Framework:** Next.js 15 (App Router)
-- **Linguagem:** TypeScript
-- **Estilização:** Tailwind CSS v4
-- **Banco de Dados:** Supabase (PostgreSQL)
-- **Autenticação:** Supabase Auth
-- **IA Médica:** RapidAPI Doctor AI
-- **Ícones:** Lucide React
-- **Deploy:** Vercel
+O app é 100% responsivo e funciona perfeitamente em:
+- 📱 Smartphones (iOS e Android)
+- 💻 Tablets
+- 🖥️ Desktops
 
 ---
 
-## 🔒 **Segurança e Privacidade**
+## 🔒 Privacidade e Segurança
 
-- ✅ Autenticação segura com Supabase
-- ✅ Dados criptografados em trânsito (HTTPS)
-- ✅ Row Level Security (RLS) no banco de dados
-- ✅ Variáveis de ambiente protegidas
-- ✅ Sem armazenamento de dados sensíveis no cliente
-
----
-
-## 📝 **Notas Importantes**
-
-### **⚠️ Aviso Médico:**
-Este aplicativo é uma ferramenta de suporte emocional e **NÃO substitui atendimento médico profissional**. Em caso de emergência ou sintomas graves, procure ajuda médica imediatamente.
-
-### **🔑 API Doctor AI (Opcional):**
-- O app funciona perfeitamente **sem a API** usando respostas locais inteligentes
-- Com a API, você obtém respostas especializadas de IA médica
-- Plano gratuito da RapidAPI: 100 requisições/mês
-- Custo adicional: a partir de $9.99/mês para mais requisições
+- ✅ Dados criptografados
+- ✅ Autenticação segura via Supabase
+- ✅ Conformidade com LGPD
+- ✅ Modo offline disponível
+- ✅ Nenhum dado compartilhado sem consentimento
 
 ---
 
-## 🤝 **Contribuindo**
+## ⚠️ Aviso Importante
 
-Contribuições são bem-vindas! Sinta-se à vontade para:
+**Este aplicativo é uma ferramenta de suporte emocional e NÃO substitui atendimento médico profissional.**
 
-1. Fazer fork do projeto
-2. Criar uma branch (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abrir um Pull Request
+Em caso de emergência ou sintomas graves:
+- 🚨 Ligue **192** (SAMU)
+- 🚨 Ligue **188** (CVV - Centro de Valorização da Vida)
+- 🚨 Procure atendimento médico imediatamente
 
 ---
 
-## 📄 **Licença**
+## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ---
 
-## 📞 **Contatos de Emergência**
+## 🤝 Contribuindo
 
-### **Brasil:**
-- 🚨 **SAMU:** 192
-- 🆘 **CVV (Centro de Valorização da Vida):** 188
-- 📞 **Emergência:** 190 (Polícia) / 193 (Bombeiros)
-
-### **Recursos Online:**
-- [CVV - Chat Online](https://www.cvv.org.br/)
-- [CAPS - Centros de Atenção Psicossocial](https://www.gov.br/saude/pt-br/acesso-a-informacao/acoes-e-programas/caps)
+Contribuições são bem-vindas! Sinta-se à vontade para:
+1. Fazer um fork do projeto
+2. Criar uma branch para sua feature (`git checkout -b feature/NovaFuncionalidade`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/NovaFuncionalidade`)
+5. Abrir um Pull Request
 
 ---
 
-## 💙 **Sobre o Projeto**
+## 📞 Suporte
 
-**Calma em Movimento** foi criado com o objetivo de democratizar o acesso a ferramentas de saúde mental, combinando tecnologia de ponta com empatia e cuidado humano.
-
-Desenvolvido com ❤️ para ajudar pessoas a cuidarem melhor de sua saúde emocional.
+Para dúvidas ou suporte:
+- 📧 Email: suporte@calmaemmovimento.com
+- 💬 Issues: [GitHub Issues](https://github.com/seu-usuario/calma-em-movimento/issues)
 
 ---
 
-**🌟 Se este projeto te ajudou, considere dar uma estrela no GitHub!**
+## 🌟 Agradecimentos
+
+Agradecimentos especiais a:
+- **Doctor AI API** pela integração de IA médica
+- **Supabase** pela infraestrutura backend
+- **Vercel** pela hospedagem
+- Todos os profissionais de saúde mental que inspiraram este projeto
+
+---
+
+**Desenvolvido com 💙 para ajudar pessoas a gerenciar ansiedade e bem-estar mental**
