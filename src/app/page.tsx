@@ -22,6 +22,9 @@ import AnxietyGraph from './components/AnxietyGraph'
 import MedicalSummary from './components/MedicalSummary'
 import { LandingPage } from './components/LandingPage'
 
+// Forçar renderização dinâmica (não fazer pre-render estático)
+export const dynamic = 'force-dynamic'
+
 export type Screen = 
   | 'landing'
   | 'logo'
@@ -71,15 +74,17 @@ export default function Home() {
   useEffect(() => {
     checkAuth()
 
-    // Listener para mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session)
-      if (session) {
-        checkUserProfile()
-      }
-    })
+    // Listener para mudanças de autenticação (apenas se Supabase estiver configurado)
+    if (supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setIsAuthenticated(!!session)
+        if (session) {
+          checkUserProfile()
+        }
+      })
 
-    return () => subscription.unsubscribe()
+      return () => subscription.unsubscribe()
+    }
   }, [])
 
   const checkAuth = async () => {
@@ -96,6 +101,14 @@ export default function Home() {
       
       if (hasSeenLogo) {
         setShowLogo(false)
+      }
+
+      // Verificar se Supabase está configurado
+      if (!supabase) {
+        console.warn('Supabase não configurado - usando modo offline')
+        setCurrentScreen(hasSeenLogo ? 'auth' : 'logo')
+        setLoading(false)
+        return
       }
 
       const { data: { session } } = await supabase.auth.getSession()
@@ -116,6 +129,12 @@ export default function Home() {
 
   const checkUserProfile = async () => {
     try {
+      if (!supabase) {
+        setHasProfile(false)
+        setCurrentScreen('initial-registration')
+        return
+      }
+
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) return
@@ -196,27 +215,29 @@ export default function Home() {
 
   const handleSaveDiary = async (entry: DiaryEntry) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) return
-
-      // Tentar salvar no Supabase (se tabela existir)
-      try {
-        await supabase
-          .from('diary_entries')
-          .upsert({
-            user_id: user.id,
-            date: entry.date,
-            anxiety_level: entry.anxietyLevel,
-            feelings: entry.feelings,
-            what_feeling: entry.whatFeeling,
-            what_caused: entry.whatCaused,
-            body_reaction: entry.bodyReaction,
-            free_thoughts: entry.freeThoughts
-          })
-      } catch (dbError) {
-        console.log('Erro ao salvar no banco (tabela pode não existir):', dbError)
-        // Continua mesmo se falhar - salva localmente
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+          // Tentar salvar no Supabase (se tabela existir)
+          try {
+            await supabase
+              .from('diary_entries')
+              .upsert({
+                user_id: user.id,
+                date: entry.date,
+                anxiety_level: entry.anxietyLevel,
+                feelings: entry.feelings,
+                what_feeling: entry.whatFeeling,
+                what_caused: entry.whatCaused,
+                body_reaction: entry.bodyReaction,
+                free_thoughts: entry.freeThoughts
+              })
+          } catch (dbError) {
+            console.log('Erro ao salvar no banco (tabela pode não existir):', dbError)
+            // Continua mesmo se falhar - salva localmente
+          }
+        }
       }
 
       // Atualizar estado local

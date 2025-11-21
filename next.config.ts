@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  devIndicators: false, // Remove widget de desenvolvimento Next.js
+  devIndicators: false,
   
   // Ignorar erros durante build (compatibilidade Vercel)
   eslint: {
@@ -157,19 +157,19 @@ const nextConfig: NextConfig = {
       // Outros provedores populares
       {
         protocol: 'https',
-        hostname: '*.uploadthing.com', // UploadThing
+        hostname: '*.uploadthing.com',
       },
       {
         protocol: 'https',
-        hostname: '*.imagekit.io', // ImageKit
+        hostname: '*.imagekit.io',
       },
       {
         protocol: 'https',
-        hostname: '*.sanity.io', // Sanity CMS
+        hostname: '*.sanity.io',
       },
       {
         protocol: 'https',
-        hostname: 'assets.vercel.com', // Vercel assets
+        hostname: 'assets.vercel.com',
       },
       
       // Para desenvolvimento local
@@ -183,20 +183,15 @@ const nextConfig: NextConfig = {
       },
     ],
     
-    // Formatos de imagem suportados
     formats: ['image/webp', 'image/avif'],
-    
-    // Tamanhos otimizados para diferentes dispositivos
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   
-  // Configuração experimental para melhor performance
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
   
-  // Headers CORS para permitir acesso da plataforma Lasy
   async headers() {
     return [
       {

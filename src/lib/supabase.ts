@@ -1,9 +1,24 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Função para criar cliente Supabase de forma segura
+function createSupabaseClient() {
+  // Apenas criar cliente no browser/runtime, nunca durante build
+  if (typeof window === 'undefined' && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return null
+  }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return null
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey)
+}
+
+// Exportar cliente (será null durante build)
+export const supabase = createSupabaseClient()
 
 // Types para o banco de dados
 export interface UserProfile {
